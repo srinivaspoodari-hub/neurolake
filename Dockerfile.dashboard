@@ -27,8 +27,10 @@ RUN pip install --no-cache-dir \
     python-multipart==0.0.6 \
     && pip install --no-cache-dir -r requirements.txt || true
 
-# Copy dashboard application
+# Copy dashboard applications
 COPY standalone_dashboard.py ./
+COPY complete_dashboard.py ./
+COPY ACTUAL_COMPLETION_STATUS.md ./
 
 # Expose dashboard port
 EXPOSE 5000
@@ -37,5 +39,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run dashboard
-CMD ["python", "standalone_dashboard.py"]
+# Run complete dashboard with all 400 tasks
+CMD ["python", "complete_dashboard.py"]
