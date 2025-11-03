@@ -30,7 +30,6 @@ RUN pip install --no-cache-dir \
 # Copy dashboard applications
 COPY standalone_dashboard.py ./
 COPY complete_dashboard.py ./
-COPY ACTUAL_COMPLETION_STATUS.md ./
 
 # Expose dashboard port
 EXPOSE 5000
