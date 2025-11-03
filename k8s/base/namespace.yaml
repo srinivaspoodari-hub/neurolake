@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neurolake
+  labels:
+    name: neurolake
+    app: neurolake
+    environment: production

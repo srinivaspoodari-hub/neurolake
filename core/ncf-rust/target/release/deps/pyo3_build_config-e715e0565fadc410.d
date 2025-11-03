@@ -1,0 +1,14 @@
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\pyo3_build_config-e715e0565fadc410.d: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\errors.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\impl_.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config-file.txt C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config.txt
+
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\libpyo3_build_config-e715e0565fadc410.rlib: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\errors.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\impl_.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config-file.txt C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config.txt
+
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\libpyo3_build_config-e715e0565fadc410.rmeta: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\errors.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\impl_.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config-file.txt C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config.txt
+
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\lib.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\errors.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pyo3-build-config-0.22.6\src\impl_.rs:
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config-file.txt:
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\pyo3-build-config-2c7b9fb854eb0bfb\out/pyo3-build-config.txt:
+
+# env-dep:CARGO_PKG_VERSION=0.22.6
+# env-dep:OUT_DIR=C:\\Users\\techh\\PycharmProjects\\neurolake\\core\\ncf-rust\\target\\release\\build\\pyo3-build-config-2c7b9fb854eb0bfb\\out

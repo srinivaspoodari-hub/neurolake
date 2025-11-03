@@ -1,0 +1,19 @@
+apiVersion: v2
+name: neurolake
+description: A Helm chart for NeuroLake AI-Native Data Platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - neurolake
+  - data-platform
+  - ai
+  - ncf
+  - analytics
+home: https://neurolake.dev
+sources:
+  - https://github.com/neurolake/neurolake
+maintainers:
+  - name: NeuroLake Team
+    email: team@neurolake.dev
+icon: https://neurolake.dev/logo.png

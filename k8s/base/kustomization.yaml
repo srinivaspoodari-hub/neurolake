@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: neurolake
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - pvc.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - postgres-statefulset.yaml
+
+commonLabels:
+  app: neurolake
+  managed-by: kustomize
+
+images:
+  - name: neurolake/api
+    newTag: latest
+  - name: neurolake/frontend
+    newTag: latest

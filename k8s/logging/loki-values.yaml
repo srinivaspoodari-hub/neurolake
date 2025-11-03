@@ -1,0 +1,263 @@
+# Loki Stack Helm Chart Values for NeuroLake
+# Use with: helm install loki grafana/loki-stack -f loki-values.yaml
+
+# Loki configuration
+loki:
+  enabled: true
+
+  # Deployment mode: SingleBinary, SimpleScalable, or Distributed
+  deploymentMode: SimpleScalable
+
+  # Persistence
+  persistence:
+    enabled: true
+    size: 50Gi
+    # storageClassName: "fast-ssd"
+
+  # Configuration
+  config:
+    # Auth
+    auth_enabled: false
+
+    # Server
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+      log_level: info
+
+    # Ingester
+    ingester:
+      chunk_idle_period: 3m
+      chunk_block_size: 262144
+      chunk_retain_period: 1m
+      max_transfer_retries: 0
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+
+    # Limits
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h  # 1 week
+      ingestion_rate_mb: 10
+      ingestion_burst_size_mb: 20
+      max_streams_per_user: 10000
+      max_global_streams_per_user: 0
+      max_query_series: 500
+      max_query_parallelism: 32
+      max_cache_freshness_per_query: 10m
+
+    # Schema
+    schema_config:
+      configs:
+        - from: 2024-01-01
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+    # Storage
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /loki/boltdb-shipper-active
+        cache_location: /loki/boltdb-shipper-cache
+        cache_ttl: 24h
+        shared_store: filesystem
+      filesystem:
+        directory: /loki/chunks
+
+    # Chunk store
+    chunk_store_config:
+      max_look_back_period: 0s
+
+    # Table manager
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 720h  # 30 days
+
+    # Compactor
+    compactor:
+      working_directory: /loki/compactor
+      shared_store: filesystem
+      compaction_interval: 10m
+      retention_enabled: true
+      retention_delete_delay: 2h
+      retention_delete_worker_count: 150
+
+  # Resources
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+# Promtail (log collector)
+promtail:
+  enabled: true
+
+  # Configuration
+  config:
+    # Server
+    server:
+      http_listen_port: 3101
+      grpc_listen_port: 0
+
+    # Positions
+    positions:
+      filename: /run/promtail/positions.yaml
+
+    # Clients
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+        tenant_id: neurolake
+
+    # Scrape configs
+    scrape_configs:
+      # Kubernetes pods
+      - job_name: kubernetes-pods
+        pipeline_stages:
+          - cri: {}
+          - json:
+              expressions:
+                timestamp: timestamp
+                level: level
+                message: message
+          - labels:
+              level:
+          - timestamp:
+              source: timestamp
+              format: RFC3339Nano
+          - output:
+              source: message
+
+        kubernetes_sd_configs:
+          - role: pod
+
+        relabel_configs:
+          # Only scrape running pods
+          - source_labels:
+              - __meta_kubernetes_pod_phase
+            action: keep
+            regex: Running
+
+          # Add namespace label
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+
+          # Add pod name label
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+
+          # Add container name label
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+
+          # Add app label
+          - source_labels:
+              - __meta_kubernetes_pod_label_app_kubernetes_io_name
+            target_label: app
+
+          # Add component label
+          - source_labels:
+              - __meta_kubernetes_pod_label_app_kubernetes_io_component
+            target_label: component
+
+          # Set path to container logs
+          - source_labels:
+              - __meta_kubernetes_pod_uid
+              - __meta_kubernetes_pod_container_name
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1/*.log
+
+      # System logs
+      - job_name: system
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: varlogs
+              __path__: /var/log/*log
+
+  # Resources
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  # Mount host paths
+  extraVolumes:
+    - name: docker
+      hostPath:
+        path: /var/lib/docker/containers
+    - name: pods
+      hostPath:
+        path: /var/log/pods
+
+  extraVolumeMounts:
+    - name: docker
+      mountPath: /var/lib/docker/containers
+      readOnly: true
+    - name: pods
+      mountPath: /var/log/pods
+      readOnly: true
+
+# Grafana integration
+grafana:
+  enabled: false  # Use existing Grafana from monitoring stack
+  sidecar:
+    datasources:
+      enabled: true
+      label: grafana_datasource
+
+# Fluent Bit (alternative to Promtail)
+fluent-bit:
+  enabled: false  # Set to true to use Fluent Bit instead of Promtail
+  config:
+    service: |
+      [SERVICE]
+          Flush 1
+          Daemon Off
+          Log_Level info
+          Parsers_File parsers.conf
+
+    inputs: |
+      [INPUT]
+          Name tail
+          Path /var/log/containers/*.log
+          Parser docker
+          Tag kube.*
+          Mem_Buf_Limit 5MB
+          Skip_Long_Lines On
+
+    filters: |
+      [FILTER]
+          Name kubernetes
+          Match kube.*
+          Kube_URL https://kubernetes.default.svc:443
+          Kube_CA_File /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          Kube_Token_File /var/run/secrets/kubernetes.io/serviceaccount/token
+          Merge_Log On
+          K8S-Logging.Parser On
+          K8S-Logging.Exclude On
+
+    outputs: |
+      [OUTPUT]
+          Name loki
+          Match *
+          Url http://loki:3100/loki/api/v1/push
+          Labels job=fluent-bit
+          Label_keys $level,$app,$component

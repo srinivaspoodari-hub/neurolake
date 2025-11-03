@@ -1,0 +1,85 @@
+[workspace]
+members = [
+    "core/query-engine",
+    "core/storage",
+    "core/optimizer",
+    "core/scheduler",
+    "core/common",
+    # "core/ncf-rust",  # NCF v2.0 Rust implementation - Building standalone
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+authors = ["NeuroLake Team <team@neurolake.dev>"]
+license = "Apache-2.0"
+repository = "https://github.com/yourusername/neurolake"
+
+[workspace.dependencies]
+# Arrow ecosystem
+arrow = "53.0"
+arrow-flight = "53.0"
+parquet = "53.0"
+datafusion = "43.0"
+datafusion-expr = "43.0"
+datafusion-optimizer = "43.0"
+
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+tokio-stream = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+
+# gRPC
+tonic = "0.12"
+prost = "0.13"
+
+# Database
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }
+
+# Distributed systems
+raft = "0.7"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+metrics = "0.23"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+bytes = "1.7"
+futures = "0.3"
+
+# Testing
+criterion = "0.5"
+proptest = "1.5"
+
+# Python bindings (for NCF module)
+pyo3 = { version = "0.20", features = ["extension-module", "abi3-py38"] }
+rmp-serde = "1.1"  # MessagePack
+zstd = { version = "0.13", features = ["zstdmt"] }
+rayon = "1.8"
+crossbeam = "0.8"
+sha2 = "0.10"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.test]
+opt-level = 1

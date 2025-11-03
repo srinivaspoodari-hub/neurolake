@@ -1,0 +1,14 @@
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\serde-a798dbbbc8c3279c.d: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\serde-bdaa4ff89aff0cc3\out/private.rs
+
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\libserde-a798dbbbc8c3279c.rlib: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\serde-bdaa4ff89aff0cc3\out/private.rs
+
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\deps\libserde-a798dbbbc8c3279c.rmeta: C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\serde-bdaa4ff89aff0cc3\out/private.rs
+
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\techh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\techh\PycharmProjects\neurolake\core\ncf-rust\target\release\build\serde-bdaa4ff89aff0cc3\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\techh\\PycharmProjects\\neurolake\\core\\ncf-rust\\target\\release\\build\\serde-bdaa4ff89aff0cc3\\out

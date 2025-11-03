@@ -1,0 +1,253 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+jobs:
+  # Create GitHub release
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          # Generate changelog
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD)
+          fi
+
+          # Save to file
+          echo "$CHANGELOG" > CHANGELOG.md
+
+          # Set output
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release notes
+        run: |
+          cat > RELEASE_NOTES.md <<EOF
+          # Release ${{ github.ref_name }}
+
+          ## Changes
+          ${{ steps.changelog.outputs.changelog }}
+
+          ## Docker Images
+          - API: \`ghcr.io/${{ github.repository }}-api:${{ github.ref_name }}\`
+          - Frontend: \`ghcr.io/${{ github.repository }}-frontend:${{ github.ref_name }}\`
+
+          ## Installation
+          \`\`\`bash
+          # Using Helm
+          helm upgrade neurolake ./helm/neurolake \\
+            --set api.image.tag=${{ github.ref_name }} \\
+            --set frontend.image.tag=${{ github.ref_name }}
+
+          # Using Docker Compose
+          docker-compose pull
+          docker-compose up -d
+          \`\`\`
+
+          ## Upgrade Notes
+          Please review the [upgrade guide](docs/upgrade.md) before upgrading.
+
+          ## Checksums
+          See attached artifacts for file checksums.
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          files: |
+            CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish Python package to PyPI
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
+
+  # Publish Rust crate to crates.io
+  publish-crates:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Publish to crates.io
+        working-directory: core/ncf-rust
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --allow-dirty
+
+  # Update Helm chart repository
+  publish-helm:
+    name: Publish Helm Chart
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0'
+
+      - name: Package Helm chart
+        run: |
+          # Update chart version
+          sed -i "s/version: .*/version: ${GITHUB_REF_NAME#v}/" helm/neurolake/Chart.yaml
+          sed -i "s/appVersion: .*/appVersion: ${GITHUB_REF_NAME}/" helm/neurolake/Chart.yaml
+
+          # Package chart
+          helm package helm/neurolake -d .
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Update Helm repository
+        run: |
+          # Copy package
+          cp neurolake-*.tgz gh-pages/
+
+          # Update index
+          helm repo index gh-pages --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+
+          # Commit and push
+          cd gh-pages
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Release Helm chart ${{ github.ref_name }}"
+          git push
+
+  # Notify stakeholders
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [create-release, publish-pypi, publish-helm]
+    if: always()
+
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "New Release: ${{ github.ref_name }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "=€ New Release: ${{ github.ref_name }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n${{ github.ref_name }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}|View Release Notes>"
+                  }
+                }
+              ]
+            }
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "NeuroLake Release ${{ github.ref_name }}"
+          to: team@neurolake.dev
+          from: CI/CD <noreply@neurolake.dev>
+          body: |
+            A new version of NeuroLake has been released!
+
+            Version: ${{ github.ref_name }}
+            Release Notes: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+
+            Docker Images:
+            - API: ghcr.io/${{ github.repository }}-api:${{ github.ref_name }}
+            - Frontend: ghcr.io/${{ github.repository }}-frontend:${{ github.ref_name }}
+
+            Helm Chart:
+            helm upgrade neurolake oci://ghcr.io/${{ github.repository }}/helm/neurolake --version ${GITHUB_REF_NAME#v}

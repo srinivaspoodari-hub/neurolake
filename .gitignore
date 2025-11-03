@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node/TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+.next/
+out/
+build/
+
+# Environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets/
+*.key
+*.pem
+
+# Data & Logs
+data/
+logs/
+*.db
+*.sqlite
+
+# Kubernetes
+kubeconfig
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Monitoring
+prometheus_data/
+grafana_data/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# Build artifacts
+*.wasm
+*.exe
+*.dll
+*.dylib
+
+# ML Models
+models/*.pkl
+models/*.h5
+models/*.onnx
+*.ckpt
+
+# Temporary files
+tmp/
+temp/
+*.tmp

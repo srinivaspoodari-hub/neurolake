@@ -1,0 +1,275 @@
+---
+# Production TLS Certificate for Main Domain
+# This certificate covers the main application domain
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neurolake-tls
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: certificate
+spec:
+  # Certificate name in the secret
+  secretName: neurolake-tls-secret
+
+  # Certificate duration and renewal
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days before expiration
+
+  # Subject
+  subject:
+    organizations:
+      - NeuroLake
+
+  # Common name (optional, first dnsName is used if not specified)
+  commonName: neurolake.example.com
+
+  # DNS names covered by this certificate
+  dnsNames:
+    - neurolake.example.com
+    - api.neurolake.example.com
+
+  # Reference to the ClusterIssuer
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  # Private key configuration
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    encoding: PKCS1
+    rotationPolicy: Always
+
+  # Key usages
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+
+---
+# Admin TLS Certificate for Monitoring Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neurolake-admin-tls
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: certificate
+spec:
+  secretName: neurolake-admin-tls
+
+  duration: 2160h
+  renewBefore: 360h
+
+  subject:
+    organizations:
+      - NeuroLake
+
+  commonName: admin.neurolake.example.com
+
+  dnsNames:
+    - admin.neurolake.example.com
+
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    encoding: PKCS1
+    rotationPolicy: Always
+
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+
+---
+# Wildcard Certificate (requires DNS-01 challenge)
+# Uncomment and configure if you need wildcard certificates
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: neurolake-wildcard-tls
+#   namespace: neurolake
+#   labels:
+#     app.kubernetes.io/name: neurolake
+#     app.kubernetes.io/component: certificate
+# spec:
+#   secretName: neurolake-wildcard-tls-secret
+#
+#   duration: 2160h
+#   renewBefore: 360h
+#
+#   subject:
+#     organizations:
+#       - NeuroLake
+#
+#   commonName: "*.neurolake.example.com"
+#
+#   dnsNames:
+#     - "*.neurolake.example.com"
+#     - neurolake.example.com
+#
+#   # Use DNS-01 issuer for wildcard certificates
+#   issuerRef:
+#     name: letsencrypt-cloudflare
+#     kind: ClusterIssuer
+#     group: cert-manager.io
+#
+#   privateKey:
+#     algorithm: RSA
+#     size: 2048
+#     encoding: PKCS1
+#     rotationPolicy: Always
+#
+#   usages:
+#     - digital signature
+#     - key encipherment
+#     - server auth
+
+---
+# Development/Staging Certificate (using staging Let's Encrypt)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neurolake-staging-tls
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: certificate
+    environment: staging
+spec:
+  secretName: neurolake-staging-tls-secret
+
+  duration: 2160h
+  renewBefore: 360h
+
+  subject:
+    organizations:
+      - NeuroLake
+
+  commonName: staging.neurolake.example.com
+
+  dnsNames:
+    - staging.neurolake.example.com
+    - api-staging.neurolake.example.com
+
+  # Use staging issuer for testing
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    encoding: PKCS1
+    rotationPolicy: Always
+
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+
+---
+# Self-Signed Certificate for Local Development
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neurolake-dev-tls
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: certificate
+    environment: development
+spec:
+  secretName: neurolake-dev-tls-secret
+
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+
+  subject:
+    organizations:
+      - NeuroLake Dev
+
+  commonName: dev.neurolake.local
+
+  dnsNames:
+    - dev.neurolake.local
+    - api.dev.neurolake.local
+    - localhost
+
+  # IP addresses for local development
+  ipAddresses:
+    - 127.0.0.1
+    - ::1
+
+  # Use self-signed issuer
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    encoding: PKCS1
+    rotationPolicy: Always
+
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+
+---
+# Certificate for Internal Services (using custom CA)
+# Uncomment if using internal CA
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: neurolake-internal-tls
+#   namespace: neurolake
+#   labels:
+#     app.kubernetes.io/name: neurolake
+#     app.kubernetes.io/component: certificate
+# spec:
+#   secretName: neurolake-internal-tls-secret
+#
+#   duration: 8760h # 1 year
+#   renewBefore: 720h
+#
+#   subject:
+#     organizations:
+#       - NeuroLake Internal
+#
+#   commonName: neurolake.internal
+#
+#   dnsNames:
+#     - neurolake.internal
+#     - api.neurolake.internal
+#     - "*.neurolake.internal"
+#
+#   issuerRef:
+#     name: ca-issuer
+#     kind: ClusterIssuer
+#     group: cert-manager.io
+#
+#   privateKey:
+#     algorithm: RSA
+#     size: 2048
+#     encoding: PKCS1
+#     rotationPolicy: Always
+#
+#   usages:
+#     - digital signature
+#     - key encipherment
+#     - server auth
+#     - client auth

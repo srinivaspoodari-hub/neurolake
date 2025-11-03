@@ -1,0 +1,238 @@
+---
+# ServiceMonitor for NeuroLake API
+# Automatically discovers and scrapes metrics from API pods
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: neurolake-api
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: api
+    prometheus: neurolake
+spec:
+  # Selector to match API service
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neurolake
+      app.kubernetes.io/component: api
+
+  # Endpoints to scrape
+  endpoints:
+    - port: http  # Port name from service definition
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+      # Relabeling
+      relabelings:
+        # Add namespace label
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+
+        # Add pod name label
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+
+        # Add service name label
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: service
+
+      # Metric relabeling (optional)
+      metricRelabelings:
+        # Drop high-cardinality metrics
+        - sourceLabels: [__name__]
+          regex: 'http_request_duration_seconds_bucket'
+          action: drop
+
+---
+# ServiceMonitor for NeuroLake Frontend
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: neurolake-frontend
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: frontend
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neurolake
+      app.kubernetes.io/component: frontend
+
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+# ServiceMonitor for PostgreSQL Exporter
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: postgres-exporter
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app: postgres-exporter
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+# ServiceMonitor for Redis Exporter
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-exporter
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: redis-exporter
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app: redis-exporter
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+# ServiceMonitor for NGINX Ingress Controller
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-ingress
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/component: controller
+
+  namespaceSelector:
+    matchNames:
+      - ingress-nginx
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+# ServiceMonitor for cert-manager
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+  labels:
+    app.kubernetes.io/name: cert-manager
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+
+  namespaceSelector:
+    matchNames:
+      - cert-manager
+
+  endpoints:
+    - port: tcp-prometheus-servicemonitor
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+# ServiceMonitor for MinIO
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: minio
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app: minio
+
+  endpoints:
+    - port: http
+      path: /minio/v2/metrics/cluster
+      interval: 30s
+      scrapeTimeout: 10s
+      scheme: http
+
+---
+# PodMonitor for NeuroLake Worker Pods
+# Use PodMonitor when services don't expose metrics or for direct pod scraping
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: neurolake-worker
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: worker
+    prometheus: neurolake
+spec:
+  # Selector to match worker pods
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neurolake
+      app.kubernetes.io/component: worker
+
+  # Pod metrics endpoints
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+      # Relabeling
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+
+---
+# PodMonitor for Celery Workers (if using Celery)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: celery-worker
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: celery
+    prometheus: neurolake
+spec:
+  selector:
+    matchLabels:
+      app: celery-worker
+
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

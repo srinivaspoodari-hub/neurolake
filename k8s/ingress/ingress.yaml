@@ -1,0 +1,190 @@
+---
+# Production Ingress with TLS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neurolake-ingress
+  namespace: neurolake
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: nginx
+
+    # SSL/TLS
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+
+    # Body size
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+    # WebSocket support
+    nginx.ingress.kubernetes.io/websocket-services: "neurolake-api-service"
+
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()";
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+    - hosts:
+        - neurolake.example.com
+        - api.neurolake.example.com
+      secretName: neurolake-tls-secret
+
+  rules:
+    # Main application
+    - host: neurolake.example.com
+      http:
+        paths:
+          # Frontend (default)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-frontend-service
+                port:
+                  number: 3000
+
+          # API endpoints
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-api-service
+                port:
+                  number: 8000
+
+          # API docs
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-api-service
+                port:
+                  number: 8000
+
+          # Health check
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-api-service
+                port:
+                  number: 8000
+
+    # API subdomain
+    - host: api.neurolake.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-api-service
+                port:
+                  number: 8000
+
+---
+# Development/Staging Ingress (HTTP only)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neurolake-ingress-dev
+  namespace: neurolake
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: dev.neurolake.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-frontend-service
+                port:
+                  number: 3000
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: neurolake-api-service
+                port:
+                  number: 8000
+
+---
+# Ingress for monitoring/admin (with basic auth)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neurolake-ingress-admin
+  namespace: neurolake
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - NeuroLake Admin'
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - admin.neurolake.example.com
+      secretName: neurolake-admin-tls
+  rules:
+    - host: admin.neurolake.example.com
+      http:
+        paths:
+          # Grafana
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+
+          # Prometheus
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus
+                port:
+                  number: 9090
+
+          # Jaeger
+          - path: /jaeger
+            pathType: Prefix
+            backend:
+              service:
+                name: jaeger-query
+                port:
+                  number: 16686

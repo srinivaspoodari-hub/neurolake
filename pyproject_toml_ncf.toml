@@ -1,0 +1,146 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurolake"
+version = "0.1.0"
+description = "AI-Native Data Platform with NCF Storage Format"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "NeuroLake Team", email = "team@neurolake.dev"}
+]
+keywords = ["data-platform", "ai", "ncf", "storage-format", "neural-compression"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # NCF Storage Engine
+    "polars>=1.12.0",
+    "duckdb>=1.0.0",
+    "pandas>=2.1.0",
+    "pyarrow>=18.0.0",
+    "numpy>=2.0.0",
+
+    # Neural Compression & Indexes
+    "torch>=2.5.0",
+    "transformers>=4.46.0",
+    "sentence-transformers>=3.2.0",
+    "scikit-learn>=1.5.0",
+    "scipy>=1.11.0",
+
+    # Compression
+    "zstandard>=0.22.0",
+    "lz4>=4.3.0",
+    "msgpack>=1.1.0",
+
+    # Core AI/ML
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-anthropic>=0.2.0",
+    "langgraph>=0.2.0",
+    "openai>=1.50.0",
+    "anthropic>=0.39.0",
+
+    # API & Services
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "httpx>=0.27.0",
+
+    # Storage & Databases
+    "sqlalchemy>=2.0.35",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.0",
+    "redis>=5.1.0",
+    "qdrant-client>=1.11.0",
+
+    # Monitoring & Observability
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "prometheus-client>=0.21.0",
+    "structlog>=24.4.0",
+
+    # Security & Compliance
+    "presidio-analyzer>=2.2.0",
+    "presidio-anonymizer>=2.2.0",
+    "cryptography>=43.0.0",
+    "pyjwt>=2.9.0",
+
+    # Utilities
+    "tenacity>=9.0.0",
+    "typer>=0.12.0",
+    "rich>=13.9.0",
+    "python-dotenv>=1.0.0",
+    "cython>=3.0.0",
+    "psutil>=6.1.0",
+    "mlflow>=2.17.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
+    "black>=24.10.0",
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+    "isort>=5.13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/neurolake/neurolake"
+Documentation = "https://docs.neurolake.ai"
+Repository = "https://github.com/neurolake/neurolake"
+"Bug Tracker" = "https://github.com/neurolake/neurolake/issues"
+
+[project.scripts]
+neurolake = "neurolake.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neurolake*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+neurolake = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312", "py313"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--cov=neurolake",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]

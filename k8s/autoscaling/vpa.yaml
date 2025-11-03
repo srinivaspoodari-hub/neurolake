@@ -1,0 +1,226 @@
+---
+# Vertical Pod Autoscaler for API Service
+# Automatically adjusts CPU and memory requests/limits
+# NOTE: VPA and HPA should not be used together on the same metrics
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: neurolake-api-vpa
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: neurolake
+spec:
+  # Reference to the deployment
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neurolake-api
+
+  # Update policy
+  updatePolicy:
+    updateMode: "Auto"  # Auto, Recreate, Initial, or Off
+    # Auto: VPA updates pods automatically
+    # Recreate: VPA evicts and recreates pods
+    # Initial: VPA only sets resources on pod creation
+    # Off: VPA only provides recommendations
+
+  # Resource policy (optional constraints)
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api
+        # Min allowed resources
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+
+        # Max allowed resources
+        maxAllowed:
+          cpu: 4000m
+          memory: 8Gi
+
+        # Which resources to control
+        controlledResources:
+          - cpu
+          - memory
+
+        # Controlled values (RequestsAndLimits, RequestsOnly)
+        controlledValues: RequestsAndLimits
+
+        # Mode for this container
+        mode: Auto
+
+---
+# VPA for Frontend Service
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: neurolake-frontend-vpa
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: neurolake
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neurolake-frontend
+
+  updatePolicy:
+    updateMode: "Auto"
+
+  resourcePolicy:
+    containerPolicies:
+      - containerName: frontend
+        minAllowed:
+          cpu: 50m
+          memory: 64Mi
+        maxAllowed:
+          cpu: 2000m
+          memory: 4Gi
+        controlledResources:
+          - cpu
+          - memory
+        controlledValues: RequestsAndLimits
+
+---
+# VPA for PostgreSQL StatefulSet
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: neurolake-postgres-vpa
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: neurolake
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: neurolake-postgres
+
+  # Use "Recreate" for stateful sets to avoid data loss
+  updatePolicy:
+    updateMode: "Initial"  # Only set on pod creation, don't update running pods
+
+  resourcePolicy:
+    containerPolicies:
+      - containerName: postgres
+        minAllowed:
+          cpu: 250m
+          memory: 512Mi
+        maxAllowed:
+          cpu: 8000m
+          memory: 32Gi
+        controlledResources:
+          - cpu
+          - memory
+        controlledValues: RequestsOnly  # Only adjust requests, not limits
+
+---
+# VPA for Redis
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: neurolake-redis-vpa
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: neurolake
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: neurolake-redis
+
+  updatePolicy:
+    updateMode: "Initial"
+
+  resourcePolicy:
+    containerPolicies:
+      - containerName: redis
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 4000m
+          memory: 16Gi
+        controlledResources:
+          - cpu
+          - memory
+        controlledValues: RequestsOnly
+
+---
+# VPA in Recommendation Mode (doesn't apply changes, just provides recommendations)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: neurolake-worker-vpa-recommender
+  namespace: neurolake
+  labels:
+    app.kubernetes.io/name: neurolake
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: neurolake
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neurolake-worker
+
+  updatePolicy:
+    updateMode: "Off"  # Only provide recommendations, don't apply
+
+  resourcePolicy:
+    containerPolicies:
+      - containerName: worker
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 8000m
+          memory: 16Gi
+        controlledResources:
+          - cpu
+          - memory
+
+---
+# VPA with Custom Recommenders
+# Example: Using historical data for better recommendations
+# apiVersion: autoscaling.k8s.io/v1
+# kind: VerticalPodAutoscaler
+# metadata:
+#   name: neurolake-api-vpa-custom
+#   namespace: neurolake
+# spec:
+#   targetRef:
+#     apiVersion: apps/v1
+#     kind: Deployment
+#     name: neurolake-api
+#
+#   updatePolicy:
+#     updateMode: "Auto"
+#
+#   # Recommenders configuration
+#   recommenders:
+#     - name: custom-recommender
+#
+#   resourcePolicy:
+#     containerPolicies:
+#       - containerName: api
+#         minAllowed:
+#           cpu: 100m
+#           memory: 128Mi
+#         maxAllowed:
+#           cpu: 4000m
+#           memory: 8Gi
+#
+#         # Scaling mode
+#         mode: Auto
+#
+#         # Overhead for safety margin
+#         # VPA adds this percentage to recommendations
+#         # Example: if recommended is 1000m CPU, with 10% overhead = 1100m

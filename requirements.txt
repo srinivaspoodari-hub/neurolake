@@ -1,0 +1,153 @@
+# NeuroLake Core Dependencies - NCF-First Architecture
+# Python 3.11+ required
+
+# =============================================================================
+# NCF Storage Engine Dependencies
+# =============================================================================
+
+# Fast Data Processing (Replacing PySpark with Polars)
+polars>=1.12.0,<2.0.0               # Fast DataFrame library (Rust-based)
+pandas>=2.1.0,<3.0.0                # DataFrame compatibility
+pyarrow>=18.0.0,<19.0.0            # Arrow format interop
+numpy>=2.0.0,<2.2.0                 # Numerical operations
+
+# Embedded SQL Engine (NCF-aware query engine)
+duckdb>=1.0.0,<2.0.0               # Embedded SQL, we'll extend for NCF
+
+# =============================================================================
+# Neural Compression & Learned Indexes
+# =============================================================================
+
+# ML/AI Libraries for NCF
+torch>=2.5.0,<3.0.0                 # Neural compression models
+transformers>=4.46.0,<5.0.0         # Semantic understanding
+sentence-transformers>=3.2.0,<4.0.0 # Embeddings
+scikit-learn>=1.5.0,<2.0.0          # ML utilities
+scipy>=1.11.0,<2.0.0                # Scientific computing
+
+# Compression Libraries (Fallback & Utils)
+zstandard>=0.22.0,<1.0.0           # Fast compression
+lz4>=4.3.0,<5.0.0                   # Fast compression
+msgpack>=1.1.0,<2.0.0               # Efficient serialization
+protobuf>=5.29.0,<6.0.0             # Schema serialization
+
+# =============================================================================
+# AI/ML Framework (Agents & Natural Language)
+# =============================================================================
+
+langchain>=0.3.0,<0.4.0
+langchain-openai>=0.2.0,<0.3.0
+langchain-anthropic>=0.2.0,<0.3.0
+langgraph>=0.2.0,<0.3.0
+openai>=1.50.0,<2.0.0
+anthropic>=0.39.0,<1.0.0
+
+# =============================================================================
+# API & Services
+# =============================================================================
+
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+pydantic>=2.9.0,<3.0.0
+pydantic-settings>=2.5.0,<3.0.0
+httpx>=0.27.0,<1.0.0
+
+# =============================================================================
+# Database & Metadata Storage
+# =============================================================================
+
+# PostgreSQL (for NCF catalog metadata)
+sqlalchemy>=2.0.35,<3.0.0
+asyncpg>=0.29.0,<1.0.0
+psycopg2-binary>=2.9.0,<3.0.0
+
+# Caching
+redis>=5.1.0,<6.0.0
+
+# Vector Database (for semantic search)
+qdrant-client>=1.11.0,<2.0.0
+
+# =============================================================================
+# Workflow Orchestration (Optional for MVP)
+# =============================================================================
+
+# temporalio>=1.7.0,<2.0.0  # Skip for now, add later if needed
+
+# =============================================================================
+# Observability & Monitoring
+# =============================================================================
+
+opentelemetry-api>=1.27.0,<2.0.0
+opentelemetry-sdk>=1.27.0,<2.0.0
+opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0
+prometheus-client>=0.21.0,<1.0.0
+structlog>=24.4.0,<25.0.0
+
+# =============================================================================
+# Data Quality & Compliance
+# =============================================================================
+
+presidio-analyzer>=2.2.0,<3.0.0
+presidio-anonymizer>=2.2.0,<3.0.0
+
+# =============================================================================
+# Utilities
+# =============================================================================
+
+tenacity>=9.0.0,<10.0.0
+typer>=0.12.0,<1.0.0
+rich>=13.9.0,<14.0.0
+python-dotenv>=1.0.0,<2.0.0
+click>=8.1.0,<9.0.0
+
+# =============================================================================
+# Security
+# =============================================================================
+
+cryptography>=43.0.0,<44.0.0
+pyjwt>=2.9.0,<3.0.0
+
+# =============================================================================
+# ML Experiment Tracking (Optional)
+# =============================================================================
+
+mlflow>=2.17.0,<3.0.0
+
+# =============================================================================
+# Performance & Optimization
+# =============================================================================
+
+# Cython for performance-critical code
+cython>=3.0.0,<4.0.0
+
+# Memory profiling
+psutil>=6.1.0,<7.0.0
+
+# =============================================================================
+# REMOVED FROM ORIGINAL (NCF-First approach)
+# =============================================================================
+
+# pyspark - REMOVED (too heavyweight, not NCF-aware)
+# delta-spark - REMOVED (building NCF instead)
+# ray[default] - REMOVED (doesn't work on Windows, add later if needed)
+
+# =============================================================================
+# Notes:
+# =============================================================================
+#
+# Key Changes from Delta Lake approach:
+# 1. Replaced PySpark with Polars (faster, Rust-based)
+# 2. Added DuckDB (embedded SQL engine, extensible)
+# 3. Removed Delta Lake (building NCF instead)
+# 4. Added compression libraries for NCF
+# 5. Added ML libraries for learned indexes
+# 6. Kept AI/ML frameworks for agents
+#
+# Why these choices:
+# - Polars: 10-100x faster than pandas for large data
+# - DuckDB: Embedded, fast, can extend for NCF reading
+# - PyTorch: Neural compression, learned indexes
+# - LangChain: AI agents, natural language interface
+#
+# Installation:
+# pip install -r requirements.txt

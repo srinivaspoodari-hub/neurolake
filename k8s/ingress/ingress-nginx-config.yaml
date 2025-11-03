@@ -1,0 +1,171 @@
+---
+# NGINX Ingress Controller ConfigMap
+# This configures global settings for the NGINX ingress controller
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+data:
+  # Connection settings
+  keep-alive: "75"
+  keep-alive-requests: "1000"
+  upstream-keepalive-connections: "50"
+  upstream-keepalive-timeout: "60"
+  upstream-keepalive-requests: "1000"
+
+  # Timeout settings
+  client-body-timeout: "60"
+  client-header-timeout: "60"
+  proxy-connect-timeout: "60"
+  proxy-send-timeout: "60"
+  proxy-read-timeout: "60"
+  proxy-next-upstream-timeout: "0"
+
+  # Body size
+  proxy-body-size: "50m"
+  client-max-body-size: "50m"
+
+  # Buffer settings
+  proxy-buffer-size: "8k"
+  proxy-buffers-number: "4"
+  client-header-buffer-size: "1k"
+  large-client-header-buffers: "4 8k"
+
+  # Logging
+  log-format-escape-json: "true"
+  log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$remote_addr",
+    "x_forwarded_for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+    "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time,
+    "status": $status, "vhost": "$host", "request_proto": "$server_protocol",
+    "path": "$uri", "request_query": "$args", "request_length": $request_length,
+    "duration": $request_time, "method": "$request_method", "http_referrer": "$http_referer",
+    "http_user_agent": "$http_user_agent", "upstream_addr": "$upstream_addr",
+    "upstream_status": "$upstream_status", "upstream_response_time": "$upstream_response_time"}'
+
+  # SSL/TLS settings
+  ssl-protocols: "TLSv1.2 TLSv1.3"
+  ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
+  ssl-prefer-server-ciphers: "on"
+  ssl-session-cache: "true"
+  ssl-session-cache-size: "10m"
+  ssl-session-timeout: "10m"
+  ssl-session-tickets: "false"
+
+  # Security headers (global defaults)
+  hsts: "true"
+  hsts-include-subdomains: "true"
+  hsts-max-age: "31536000"
+  hsts-preload: "true"
+
+  # Rate limiting
+  limit-req-status-code: "429"
+  limit-conn-status-code: "429"
+
+  # Performance
+  use-gzip: "true"
+  gzip-level: "5"
+  gzip-types: "application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+
+  # HTTP/2
+  use-http2: "true"
+  http2-max-field-size: "16k"
+  http2-max-header-size: "32k"
+
+  # Real IP (adjust based on your load balancer/proxy)
+  use-forwarded-headers: "true"
+  compute-full-forwarded-for: "true"
+  use-proxy-protocol: "false"
+
+  # Customize based on your setup (CloudFlare, AWS ELB, GCP LB, etc.)
+  # proxy-real-ip-cidr: "10.0.0.0/8"
+
+  # Worker settings
+  worker-processes: "auto"
+  max-worker-connections: "16384"
+  max-worker-open-files: "65536"
+
+  # Enable ModSecurity WAF (optional - requires ModSecurity module)
+  enable-modsecurity: "false"
+  enable-owasp-modsecurity-crs: "false"
+
+  # Custom error pages (optional)
+  # custom-http-errors: "404,503"
+  # default-backend-service: "neurolake/custom-error-pages"
+
+---
+# NGINX Ingress Controller Rate Limiting ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-rate-limits
+  namespace: neurolake
+data:
+  # Rate limit zones
+  # These can be referenced in ingress annotations
+  limit-rate-configs: |
+    # API rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
+    limit_req_zone $binary_remote_addr zone=api_burst:10m rate=200r/s;
+
+    # Frontend rate limiting
+    limit_req_zone $binary_remote_addr zone=frontend_limit:10m rate=50r/s;
+
+    # Admin rate limiting (stricter)
+    limit_req_zone $binary_remote_addr zone=admin_limit:10m rate=20r/s;
+
+    # Connection limiting
+    limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+
+---
+# NGINX Ingress Controller DaemonSet/Deployment Configuration
+# This is a reference configuration - adjust based on your deployment method
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  type: LoadBalancer  # Change to NodePort for on-prem clusters
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
+---
+# NGINX Ingress Controller Metrics Service (for Prometheus)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx-controller-metrics
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 10254
+      protocol: TCP
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx

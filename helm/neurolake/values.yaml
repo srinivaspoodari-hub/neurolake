@@ -1,0 +1,279 @@
+# Default values for neurolake
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configuration
+global:
+  imagePullSecrets: []
+  storageClass: "standard"
+
+# API configuration
+api:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: neurolake/api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    port: 8000
+    annotations: {}
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  env:
+    LOG_LEVEL: "info"
+    API_WORKERS: "4"
+    ENV: "production"
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: neurolake/frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    port: 3000
+    annotations: {}
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  env:
+    NODE_ENV: "production"
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+
+  auth:
+    database: neurolake
+    username: neurolake
+    existingSecret: "neurolake-secrets"
+    secretKeys:
+      adminPasswordKey: DB_PASSWORD
+      userPasswordKey: DB_PASSWORD
+
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: ""
+
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+
+# Redis configuration
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+
+  auth:
+    enabled: false
+
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+
+# MinIO (S3-compatible object storage)
+minio:
+  enabled: false
+  mode: standalone
+
+  auth:
+    rootUser: neurolake
+    existingSecret: "neurolake-secrets"
+
+  persistence:
+    enabled: true
+    size: 100Gi
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+  hosts:
+    - host: neurolake.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: api
+
+  tls:
+    - secretName: neurolake-tls
+      hosts:
+        - neurolake.example.com
+
+# Persistence
+persistence:
+  data:
+    enabled: true
+    size: 50Gi
+    accessMode: ReadWriteMany
+    storageClass: ""
+
+  logs:
+    enabled: false
+    size: 10Gi
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "neurolake-api"
+
+# Pod Security Context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 999
+  fsGroup: 999
+
+# Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# Node Selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - neurolake
+          topologyKey: kubernetes.io/hostname
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+
+  prometheusRule:
+    enabled: false
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ConfigMap data
+config:
+  # Database
+  DB_HOST: "{{ .Release.Name }}-postgresql"
+  DB_PORT: "5432"
+  DB_NAME: "neurolake"
+
+  # Redis
+  REDIS_HOST: "{{ .Release.Name }}-redis-master"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # S3/MinIO
+  S3_ENDPOINT: "http://{{ .Release.Name }}-minio:9000"
+  S3_BUCKET: "neurolake-data"
+
+  # Monitoring
+  PROMETHEUS_MULTIPROC_DIR: "/tmp/prometheus"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
+
+# Secrets (create separately in production)
+secrets:
+  DB_PASSWORD: "CHANGE_ME"
+  S3_ACCESS_KEY: "neurolake"
+  S3_SECRET_KEY: "CHANGE_ME"
+  JWT_SECRET: "CHANGE_ME"
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""

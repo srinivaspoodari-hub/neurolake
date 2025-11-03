@@ -1,0 +1,319 @@
+# Elasticsearch Helm Chart Values for NeuroLake ELK Stack
+# Use with: helm install elasticsearch elastic/elasticsearch -f elasticsearch-values.yaml
+
+# Elasticsearch cluster configuration
+clusterName: "neurolake-logs"
+nodeGroup: "master"
+
+# Replicas
+replicas: 3
+minimumMasterNodes: 2
+
+# Roles
+roles:
+  - master
+  - data
+  - ingest
+
+# Resources
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+# JVM heap size (should be 50% of memory limit)
+esJavaOpts: "-Xmx2g -Xms2g"
+
+# Volume claim
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 100Gi
+  # storageClassName: "fast-ssd"
+
+# Persistence
+persistence:
+  enabled: true
+
+# Security
+esConfig:
+  elasticsearch.yml: |
+    # Cluster
+    cluster.name: neurolake-logs
+
+    # Network
+    network.host: 0.0.0.0
+
+    # Discovery
+    discovery.seed_hosts: elasticsearch-master-headless
+    cluster.initial_master_nodes: elasticsearch-master-0,elasticsearch-master-1,elasticsearch-master-2
+
+    # Security (disable for development, enable for production)
+    xpack.security.enabled: false
+    xpack.security.transport.ssl.enabled: false
+    xpack.security.http.ssl.enabled: false
+
+    # Monitoring
+    xpack.monitoring.collection.enabled: true
+
+    # Index lifecycle management
+    xpack.ilm.enabled: true
+
+# Service
+service:
+  type: ClusterIP
+  port: 9200
+  nodePort: null
+
+# Anti-affinity (spread across nodes)
+antiAffinity: "soft"
+
+# Init containers
+sysctlInitContainer:
+  enabled: true
+
+# Protocol
+protocol: http
+
+# Health checks
+healthCheckPath: "/_cluster/health"
+
+---
+# Kibana Helm Chart Values
+# Use with: helm install kibana elastic/kibana -f kibana-values.yaml
+
+# Elasticsearch URL
+elasticsearchHosts: "http://elasticsearch-master:9200"
+
+# Replicas
+replicas: 2
+
+# Resources
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# Service
+service:
+  type: ClusterIP
+  port: 5601
+
+# Ingress
+ingress:
+  enabled: false  # Enable if needed
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: kibana.neurolake.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kibana-tls
+      hosts:
+        - kibana.neurolake.example.com
+
+# Kibana configuration
+kibanaConfig:
+  kibana.yml: |
+    server.name: kibana
+    server.host: "0.0.0.0"
+    elasticsearch.hosts: [ "http://elasticsearch-master:9200" ]
+
+    # Monitoring
+    monitoring.ui.container.elasticsearch.enabled: true
+
+    # Security (disable for development)
+    xpack.security.enabled: false
+
+    # Default index pattern
+    kibana.index: ".kibana"
+    kibana.defaultAppId: "discover"
+
+# Health checks
+healthCheckPath: "/api/status"
+
+---
+# Filebeat DaemonSet Values
+# Use with: helm install filebeat elastic/filebeat -f filebeat-values.yaml
+
+# Filebeat configuration
+filebeatConfig:
+  filebeat.yml: |
+    # Filebeat inputs
+    filebeat.inputs:
+      # Container logs
+      - type: container
+        enabled: true
+        paths:
+          - /var/log/containers/*.log
+        processors:
+          - add_kubernetes_metadata:
+              host: ${NODE_NAME}
+              matchers:
+              - logs_path:
+                  logs_path: "/var/log/containers/"
+          - decode_json_fields:
+              fields: ["message"]
+              target: "json"
+              overwrite_keys: true
+          - drop_event:
+              when:
+                or:
+                  - equals:
+                      kubernetes.namespace: "kube-system"
+                  - equals:
+                      kubernetes.namespace: "kube-public"
+
+    # Output to Elasticsearch
+    output.elasticsearch:
+      hosts: ["http://elasticsearch-master:9200"]
+      indices:
+        - index: "neurolake-api-%{+yyyy.MM.dd}"
+          when.contains:
+            kubernetes.labels.app_kubernetes_io_component: "api"
+        - index: "neurolake-frontend-%{+yyyy.MM.dd}"
+          when.contains:
+            kubernetes.labels.app_kubernetes_io_component: "frontend"
+        - index: "neurolake-worker-%{+yyyy.MM.dd}"
+          when.contains:
+            kubernetes.labels.app_kubernetes_io_component: "worker"
+        - index: "neurolake-system-%{+yyyy.MM.dd}"
+
+    # Index lifecycle policy
+    setup.ilm.enabled: true
+    setup.ilm.rollover_alias: "filebeat"
+    setup.ilm.pattern: "{now/d}-000001"
+    setup.ilm.policy_name: "neurolake-logs"
+
+    # Kibana setup
+    setup.kibana:
+      host: "http://kibana-kibana:5601"
+
+    # Processors
+    processors:
+      - add_cloud_metadata: ~
+      - add_host_metadata: ~
+      - add_docker_metadata: ~
+      - add_kubernetes_metadata: ~
+
+# DaemonSet configuration
+daemonset:
+  enabled: true
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 100Mi
+  limits:
+    cpu: 200m
+    memory: 200Mi
+
+# Host paths
+hostPathRoot: /var/lib
+
+# Extra volumes
+extraVolumes:
+  - name: varlibdockercontainers
+    hostPath:
+      path: /var/lib/docker/containers
+  - name: varlog
+    hostPath:
+      path: /var/log
+
+extraVolumeMounts:
+  - name: varlibdockercontainers
+    mountPath: /var/lib/docker/containers
+    readOnly: true
+  - name: varlog
+    mountPath: /var/log
+    readOnly: true
+
+---
+# Logstash Values (optional - for log processing pipeline)
+# Use with: helm install logstash elastic/logstash -f logstash-values.yaml
+
+# Replicas
+replicas: 2
+
+# Resources
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# JVM options
+logstashJavaOpts: "-Xmx1g -Xms1g"
+
+# Pipeline configuration
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+
+    filter {
+      # Parse JSON logs
+      if [message] =~ /^\{.*\}$/ {
+        json {
+          source => "message"
+          target => "json_data"
+        }
+      }
+
+      # Extract log level
+      grok {
+        match => { "message" => "%{LOGLEVEL:log_level}" }
+      }
+
+      # Add timestamp
+      date {
+        match => [ "timestamp", "ISO8601" ]
+        target => "@timestamp"
+      }
+
+      # Kubernetes metadata enrichment
+      if [kubernetes] {
+        mutate {
+          add_field => {
+            "k8s_namespace" => "%{[kubernetes][namespace]}"
+            "k8s_pod" => "%{[kubernetes][pod][name]}"
+            "k8s_container" => "%{[kubernetes][container][name]}"
+          }
+        }
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch-master:9200"]
+        index => "logstash-%{+YYYY.MM.dd}"
+      }
+
+      # Debug output (remove in production)
+      # stdout { codec => rubydebug }
+    }
+
+# Service
+service:
+  type: ClusterIP
+  ports:
+    - name: beats
+      port: 5044
+      protocol: TCP
+      targetPort: 5044

@@ -1,0 +1,78 @@
+=€ NeuroLake has been successfully deployed!
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+=Ê Components Deployed:
+{{- if .Values.api.enabled }}
+   API Service ({{ .Values.api.replicaCount }} replicas)
+{{- end }}
+{{- if .Values.frontend.enabled }}
+   Frontend Service ({{ .Values.frontend.replicaCount }} replicas)
+{{- end }}
+{{- if .Values.postgresql.enabled }}
+   PostgreSQL Database
+{{- end }}
+{{- if .Values.redis.enabled }}
+   Redis Cache
+{{- end }}
+
+= Access Information:
+
+{{- if .Values.ingress.enabled }}
+1. Application URL:
+   {{- range .Values.ingress.hosts }}
+   https://{{ .host }}
+   {{- end }}
+{{- else }}
+
+1. Get the API URL by running:
+   {{- if contains "NodePort" .Values.api.service.type }}
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "neurolake.fullname" . }}-api)
+   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   echo http://$NODE_IP:$NODE_PORT
+   {{- else if contains "LoadBalancer" .Values.api.service.type }}
+   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "neurolake.fullname" . }}-api -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   echo http://$SERVICE_IP:{{ .Values.api.service.port }}
+   {{- else if contains "ClusterIP" .Values.api.service.type }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "neurolake.fullname" . }}-api {{ .Values.api.service.port }}:{{ .Values.api.service.port }}
+   echo "API: http://127.0.0.1:{{ .Values.api.service.port }}"
+   {{- end }}
+
+2. Get the Frontend URL by running:
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "neurolake.fullname" . }}-frontend {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }}
+   echo "Frontend: http://127.0.0.1:{{ .Values.frontend.service.port }}"
+{{- end }}
+
+=Ý Next Steps:
+
+1. Check the status of all pods:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+2. View API logs:
+   kubectl logs -f -n {{ .Release.Namespace }} -l app.kubernetes.io/component=api
+
+3. View Frontend logs:
+   kubectl logs -f -n {{ .Release.Namespace }} -l app.kubernetes.io/component=frontend
+
+4. Access the API documentation:
+   http://localhost:{{ .Values.api.service.port }}/docs
+
+™ Configuration:
+   To customize your deployment, update values.yaml or use --set flags:
+   helm upgrade {{ .Release.Name }} neurolake/neurolake --set api.replicaCount=5
+
+= Security:
+      Remember to update default secrets in production!
+   - Database password
+   - S3/MinIO credentials
+   - JWT secret
+   - API keys
+
+=Ú Documentation:
+   https://docs.neurolake.dev
+
+= Issues:
+   https://github.com/neurolake/neurolake/issues
+
+Happy data processing! <‰
