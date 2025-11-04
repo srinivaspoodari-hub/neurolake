@@ -1,0 +1,40 @@
+# NeuroLake Migration Module Requirements
+
+# Core Dependencies
+anthropic>=0.18.0
+streamlit>=1.31.0
+sqlparse>=0.4.4
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Spark (optional - for execution)
+pyspark>=3.5.0
+
+# Database Connectors (optional)
+psycopg2-binary>=2.9.0
+pymysql>=1.1.0
+pyodbc>=5.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+chispa>=0.9.0
+
+# Utilities
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Visualization
+plotly>=5.18.0
+matplotlib>=3.8.0
+
+# Code Quality
+black>=23.12.0
+flake8>=7.0.0
+mypy>=1.8.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0
