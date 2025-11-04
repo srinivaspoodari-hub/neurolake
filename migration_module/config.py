@@ -52,6 +52,66 @@ SUPPORTED_PLATFORMS = {
         'name': 'Oracle BI',
         'extensions': ['.rpd', '.xml'],
         'versions': ['12c']
+    },
+    'sap_bods': {
+        'name': 'SAP Data Services (BODS)',
+        'extensions': ['.atl', '.xml', '.dsx'],
+        'versions': ['4.x']
+    },
+    'odi': {
+        'name': 'Oracle Data Integrator (ODI)',
+        'extensions': ['.xml', '.scen'],
+        'versions': ['11g', '12c']
+    },
+    'sas': {
+        'name': 'SAS ETL Studio / Data Integration',
+        'extensions': ['.sas', '.egp', '.xml'],
+        'versions': ['9.x']
+    },
+    'infosphere': {
+        'name': 'IBM InfoSphere Information Server',
+        'extensions': ['.isx', '.xml'],
+        'versions': ['11.x']
+    },
+    'alteryx': {
+        'name': 'Alteryx Designer',
+        'extensions': ['.yxmd', '.yxwz', '.xml'],
+        'versions': ['2020.x', '2021.x', '2022.x', '2023.x']
+    },
+    'snaplogic': {
+        'name': 'SnapLogic',
+        'extensions': ['.slp', '.json'],
+        'versions': ['Enterprise']
+    },
+    'matillion': {
+        'name': 'Matillion ETL',
+        'extensions': ['.json', '.zip'],
+        'versions': ['1.x']
+    },
+    'adf': {
+        'name': 'Azure Data Factory (Legacy)',
+        'extensions': ['.json'],
+        'versions': ['V1', 'V2']
+    },
+    'glue': {
+        'name': 'AWS Glue ETL',
+        'extensions': ['.py', '.scala', '.json'],
+        'versions': ['1.0', '2.0', '3.0', '4.0']
+    },
+    'nifi': {
+        'name': 'Apache NiFi',
+        'extensions': ['.xml', '.json'],
+        'versions': ['1.x']
+    },
+    'airflow': {
+        'name': 'Apache Airflow DAGs',
+        'extensions': ['.py'],
+        'versions': ['1.x', '2.x']
+    },
+    'streamsets': {
+        'name': 'StreamSets Data Collector',
+        'extensions': ['.json'],
+        'versions': ['3.x', '4.x', '5.x']
     }
 }
 
