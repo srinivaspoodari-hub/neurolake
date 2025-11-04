@@ -10,8 +10,8 @@ from typing import Dict, List
 SUPPORTED_PLATFORMS = {
     'sql': {
         'name': 'SQL Stored Procedures',
-        'extensions': ['.sql', '.ddl', '.dml'],
-        'dialects': ['oracle', 'mssql', 'postgresql', 'mysql', 'db2', 'teradata', 'snowflake']
+        'extensions': ['.sql', '.ddl', '.dml', '.rs'],
+        'dialects': ['oracle', 'mssql', 'postgresql', 'mysql', 'db2', 'teradata', 'snowflake', 'rust_sql']
     },
     'talend': {
         'name': 'Talend',
@@ -119,7 +119,7 @@ SUPPORTED_PLATFORMS = {
 TARGET_PLATFORMS = {
     'sql': {
         'name': 'Optimized SQL',
-        'engines': ['postgresql', 'mysql', 'snowflake', 'redshift', 'bigquery']
+        'engines': ['postgresql', 'mysql', 'snowflake', 'redshift', 'bigquery', 'rust_sql']
     },
     'spark': {
         'name': 'Apache Spark (PySpark)',
@@ -128,6 +128,12 @@ TARGET_PLATFORMS = {
     'databricks': {
         'name': 'Databricks SQL & Delta',
         'features': ['delta_lake', 'photon', 'serverless']
+    },
+    'neurolake': {
+        'name': 'NeuroLake Platform',
+        'storage_formats': ['ncf', 'delta_lake', 'parquet', 'iceberg'],
+        'features': ['ai_native', 'auto_optimization', 'intelligent_caching', 'ml_integration'],
+        'query_engines': ['neurolake_sql', 'spark', 'presto', 'rust_sql']
     }
 }
 
