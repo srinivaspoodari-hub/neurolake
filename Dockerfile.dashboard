@@ -27,9 +27,18 @@ RUN pip install --no-cache-dir \
     python-multipart==0.0.6 \
     && pip install --no-cache-dir -r requirements.txt || true
 
+# Copy NeuroLake Python package
+COPY neurolake/ ./neurolake/
+COPY pyproject.toml ./
+COPY setup.py* ./
+
+# Install NeuroLake package in editable mode
+RUN pip install --no-cache-dir -e . || echo "Warning: Could not install neurolake package"
+
 # Copy dashboard applications
 COPY standalone_dashboard.py ./
 COPY complete_dashboard.py ./
+COPY advanced_databricks_dashboard.py ./
 
 # Expose dashboard port
 EXPOSE 5000
@@ -38,5 +47,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run complete dashboard with all 400 tasks
-CMD ["python", "complete_dashboard.py"]
+# Run advanced Databricks-like dashboard with ALL features
+CMD ["python", "advanced_databricks_dashboard.py"]
