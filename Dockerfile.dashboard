@@ -24,7 +24,14 @@ RUN pip install --no-cache-dir \
     psycopg2-binary==2.9.9 \
     minio==7.2.0 \
     redis==5.0.1 \
-    python-multipart==0.0.6 \
+    python-multipart==0.0.20 \
+    numpy==1.26.0 \
+    pyyaml==6.0.1 \
+    pandas==2.1.3 \
+    sqlparse==0.4.4 \
+    msgpack==1.1.0 \
+    zstandard==0.22.0 \
+    anthropic==0.72.0 \
     && pip install --no-cache-dir -r requirements.txt || true
 
 # Copy NeuroLake Python package
@@ -35,10 +42,18 @@ COPY setup.py* ./
 # Install NeuroLake package in editable mode
 RUN pip install --no-cache-dir -e . || echo "Warning: Could not install neurolake package"
 
-# Copy dashboard applications
-COPY standalone_dashboard.py ./
-COPY complete_dashboard.py ./
+# Copy unified dashboard application and migration UI
 COPY advanced_databricks_dashboard.py ./
+COPY migration_ui.html ./
+COPY migration_module/ ./migration_module/
+
+# Copy notebook system files
+COPY neurolake_notebook_system.py ./
+COPY notebook_advanced_features.py ./
+COPY notebook_api_endpoints.py ./
+COPY notebook_ui.html ./
+COPY notebook_export.py* ./
+COPY notebook_*.py* ./
 
 # Expose dashboard port
 EXPOSE 5000

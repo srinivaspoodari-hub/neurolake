@@ -1,34 +1,6 @@
 services:
-  # NeuroLake Migration Module - Code Migration Dashboard
-  migration-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.migration
-    image: neurolake/migration:latest
-    container_name: neurolake-migration
-    ports:
-      - "8501:8501"  # Streamlit migration dashboard
-    environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_HEADLESS=true
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-    volumes:
-      - ./migration_module/uploads:/app/migration_module/uploads
-      - ./data:/app/data
-      - ./logs:/app/logs
-    networks:
-      - neurolake-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   # NeuroLake Unified Dashboard - All MVP Features (Tasks 251-270)
+  # Includes: Notebooks, Migration, Query Engine, AI Agents, Compliance, etc.
   dashboard:
     build:
       context: .
@@ -51,6 +23,12 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: neurolake
       MINIO_SECRET_KEY: dev_password_change_in_prod
+    volumes:
+      # Local-first storage - User's computer storage mounted into container
+      - C:/NeuroLake:/neurolake
+      - C:/NeuroLake/catalog:/data/catalog
+      - C:/NeuroLake/logs:/data/logs
+      - C:/NeuroLake/cache:/data/cache
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,9 +99,10 @@ services:
       LOG_LEVEL: debug
       API_WORKERS: 2
     volumes:
-      - ./data:/data
-      - ./logs:/logs
-      - ./cache:/cache
+      - C:/NeuroLake:/neurolake
+      - C:/NeuroLake/catalog:/data/catalog
+      - C:/NeuroLake/logs:/logs
+      - C:/NeuroLake/cache:/cache
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,0 +1,64 @@
+{
+  "lineage_graph": {
+    "q_customer_orders_001": {
+      "type": "query",
+      "query_id": "q_customer_orders_001",
+      "inputs": [
+        "production.public.customers",
+        "production.public.orders"
+      ],
+      "outputs": [
+        "analytics.public.customer_orders"
+      ],
+      "query_text": "\n            SELECT\n                c.customer_id,\n                c.first_name || ' ' || c.last_name as customer_name,\n                COUNT(o.order_id) as total_orders,\n                SUM(o.total_price) as total_revenue,\n                AVG(o.total_price) as avg_order_value\n            FROM production.public.customers c\n            JOIN production.public.orders o ON c.customer_id = o.customer_id\n            GROUP BY c.customer_id, c.first_name, c.last_name\n        ",
+      "timestamp": "2025-11-05T16:46:34.648327",
+      "column_mapping": {
+        "customer_name": [
+          "customers.first_name",
+          "customers.last_name"
+        ],
+        "total_orders": [
+          "orders.order_id"
+        ],
+        "total_revenue": [
+          "orders.total_price"
+        ],
+        "avg_order_value": [
+          "orders.total_price"
+        ]
+      }
+    },
+    "trans_revenue_001": {
+      "type": "transformation",
+      "transformation_id": "trans_revenue_001",
+      "input_columns": [
+        "orders.quantity",
+        "orders.price"
+      ],
+      "output_columns": [
+        "orders.total_price"
+      ],
+      "logic": "total_price = quantity * price",
+      "timestamp": "2025-11-05T16:46:34.648939"
+    }
+  },
+  "column_lineage": {
+    "analytics.public.customer_orders.customer_name": [
+      "customers.last_name",
+      "customers.first_name"
+    ],
+    "analytics.public.customer_orders.total_orders": [
+      "orders.order_id"
+    ],
+    "analytics.public.customer_orders.total_revenue": [
+      "orders.total_price"
+    ],
+    "analytics.public.customer_orders.avg_order_value": [
+      "orders.total_price"
+    ],
+    "orders.total_price": [
+      "orders.price",
+      "orders.quantity"
+    ]
+  }
+}

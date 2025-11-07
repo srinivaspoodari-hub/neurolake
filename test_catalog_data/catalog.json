@@ -1,0 +1,416 @@
+{
+  "assets": {
+    "table_production_public_customers": {
+      "asset_id": "table_production_public_customers",
+      "asset_type": "table",
+      "name": "customers",
+      "fully_qualified_name": "production.public.customers",
+      "database": "production",
+      "schema": "public",
+      "description": "Customer master data table",
+      "owner": "data_team",
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "int",
+          "nullable": false,
+          "description": "Unique customer identifier"
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "ssn",
+          "type": "string",
+          "nullable": true,
+          "sensitive": true,
+          "pii": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false
+        }
+      ],
+      "tags": [
+        "customer",
+        "pii",
+        "production",
+        "core"
+      ],
+      "metadata": {
+        "row_count": 10000,
+        "table_size_mb": 5.2
+      },
+      "created_at": "2025-11-05T16:46:34.602971",
+      "updated_at": "2025-11-05T16:46:34.602981",
+      "access_count": 2,
+      "last_accessed": null
+    },
+    "table_production_public_customers_col_customer_id": {
+      "asset_id": "table_production_public_customers_col_customer_id",
+      "asset_type": "column",
+      "name": "customer_id",
+      "table_id": "table_production_public_customers",
+      "data_type": "int",
+      "description": "Unique customer identifier",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.602992",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_first_name": {
+      "asset_id": "table_production_public_customers_col_first_name",
+      "asset_type": "column",
+      "name": "first_name",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.603822",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_last_name": {
+      "asset_id": "table_production_public_customers_col_last_name",
+      "asset_type": "column",
+      "name": "last_name",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.604556",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_email": {
+      "asset_id": "table_production_public_customers_col_email",
+      "asset_type": "column",
+      "name": "email",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.605343",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_ssn": {
+      "asset_id": "table_production_public_customers_col_ssn",
+      "asset_type": "column",
+      "name": "ssn",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.606164",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_created_at": {
+      "asset_id": "table_production_public_customers_col_created_at",
+      "asset_type": "column",
+      "name": "created_at",
+      "table_id": "table_production_public_customers",
+      "data_type": "timestamp",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.606798",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders": {
+      "asset_id": "table_production_public_orders",
+      "asset_type": "table",
+      "name": "orders",
+      "fully_qualified_name": "production.public.orders",
+      "database": "production",
+      "schema": "public",
+      "description": "Order transactions table",
+      "owner": "data_team",
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "int",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "type": "int",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "int",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "type": "int",
+          "nullable": false
+        },
+        {
+          "name": "total_price",
+          "type": "decimal",
+          "nullable": false
+        },
+        {
+          "name": "order_date",
+          "type": "timestamp",
+          "nullable": false
+        }
+      ],
+      "tags": [
+        "transactional",
+        "orders",
+        "production"
+      ],
+      "metadata": {
+        "row_count": 50000,
+        "table_size_mb": 12.5
+      },
+      "created_at": "2025-11-05T16:46:34.608509",
+      "updated_at": "2025-11-05T16:46:34.608520",
+      "access_count": 1,
+      "last_accessed": null
+    },
+    "table_production_public_orders_col_order_id": {
+      "asset_id": "table_production_public_orders_col_order_id",
+      "asset_type": "column",
+      "name": "order_id",
+      "table_id": "table_production_public_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.608533",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders_col_customer_id": {
+      "asset_id": "table_production_public_orders_col_customer_id",
+      "asset_type": "column",
+      "name": "customer_id",
+      "table_id": "table_production_public_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.609649",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders_col_product_id": {
+      "asset_id": "table_production_public_orders_col_product_id",
+      "asset_type": "column",
+      "name": "product_id",
+      "table_id": "table_production_public_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.610862",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders_col_quantity": {
+      "asset_id": "table_production_public_orders_col_quantity",
+      "asset_type": "column",
+      "name": "quantity",
+      "table_id": "table_production_public_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.612284",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders_col_total_price": {
+      "asset_id": "table_production_public_orders_col_total_price",
+      "asset_type": "column",
+      "name": "total_price",
+      "table_id": "table_production_public_orders",
+      "data_type": "decimal",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.613287",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_orders_col_order_date": {
+      "asset_id": "table_production_public_orders_col_order_date",
+      "asset_type": "column",
+      "name": "order_date",
+      "table_id": "table_production_public_orders",
+      "data_type": "timestamp",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.614187",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_analytics_public_customer_orders": {
+      "asset_id": "table_analytics_public_customer_orders",
+      "asset_type": "table",
+      "name": "customer_orders",
+      "fully_qualified_name": "analytics.public.customer_orders",
+      "database": "analytics",
+      "schema": "public",
+      "description": "Aggregated customer order statistics",
+      "owner": "analytics_team",
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "int"
+        },
+        {
+          "name": "customer_name",
+          "type": "string"
+        },
+        {
+          "name": "total_orders",
+          "type": "int"
+        },
+        {
+          "name": "total_revenue",
+          "type": "decimal"
+        },
+        {
+          "name": "avg_order_value",
+          "type": "decimal"
+        }
+      ],
+      "tags": [
+        "analytics",
+        "aggregated",
+        "reporting"
+      ],
+      "metadata": {
+        "row_count": 10000,
+        "refresh_schedule": "daily"
+      },
+      "created_at": "2025-11-05T16:46:34.616412",
+      "updated_at": "2025-11-05T16:46:34.616418",
+      "access_count": 0,
+      "last_accessed": null
+    },
+    "table_analytics_public_customer_orders_col_customer_id": {
+      "asset_id": "table_analytics_public_customer_orders_col_customer_id",
+      "asset_type": "column",
+      "name": "customer_id",
+      "table_id": "table_analytics_public_customer_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.616425",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_analytics_public_customer_orders_col_customer_name": {
+      "asset_id": "table_analytics_public_customer_orders_col_customer_name",
+      "asset_type": "column",
+      "name": "customer_name",
+      "table_id": "table_analytics_public_customer_orders",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.617578",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_analytics_public_customer_orders_col_total_orders": {
+      "asset_id": "table_analytics_public_customer_orders_col_total_orders",
+      "asset_type": "column",
+      "name": "total_orders",
+      "table_id": "table_analytics_public_customer_orders",
+      "data_type": "int",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.618801",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_analytics_public_customer_orders_col_total_revenue": {
+      "asset_id": "table_analytics_public_customer_orders_col_total_revenue",
+      "asset_type": "column",
+      "name": "total_revenue",
+      "table_id": "table_analytics_public_customer_orders",
+      "data_type": "decimal",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.620556",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_analytics_public_customer_orders_col_avg_order_value": {
+      "asset_id": "table_analytics_public_customer_orders_col_avg_order_value",
+      "asset_type": "column",
+      "name": "avg_order_value",
+      "table_id": "table_analytics_public_customer_orders",
+      "data_type": "decimal",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T16:46:34.621776",
+      "sensitive": false,
+      "business_term": null
+    }
+  },
+  "tags": {
+    "customer": [
+      "table_production_public_customers"
+    ],
+    "pii": [
+      "table_production_public_customers"
+    ],
+    "production": [
+      "table_production_public_customers",
+      "table_production_public_orders"
+    ],
+    "core": [
+      "table_production_public_customers"
+    ],
+    "transactional": [
+      "table_production_public_orders"
+    ],
+    "orders": [
+      "table_production_public_orders"
+    ],
+    "analytics": [
+      "table_analytics_public_customer_orders"
+    ],
+    "aggregated": [
+      "table_analytics_public_customer_orders"
+    ],
+    "reporting": [
+      "table_analytics_public_customer_orders"
+    ]
+  },
+  "lineage": {},
+  "business_glossary": {}
+}

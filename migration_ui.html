@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLake Migration Tool - Code Conversion Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.css">
+    <style>
+        :root {
+            --primary-color: #FF3621;
+            --secondary-color: #00A972;
+            --bg-dark: #1E1E1E;
+            --bg-card: #252525;
+            --border-color: #3A3A3A;
+            --text-primary: #E3E3E3;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #E02F1B;
+        }
+
+        .btn-success {
+            background: var(--secondary-color);
+            border: none;
+        }
+
+        .form-select, .form-control {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-select:focus, .form-control:focus {
+            background: var(--bg-dark);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        #editor-container {
+            height: 400px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        #result-container {
+            height: 400px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: rgba(0, 169, 114, 0.2);
+            color: var(--secondary-color);
+        }
+
+        .status-error {
+            background: rgba(255, 54, 33, 0.2);
+            color: var(--primary-color);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .platform-card {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .platform-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .platform-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(255, 54, 33, 0.1);
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="logo">⚡ NeuroLake</span>
+                <span class="ms-3 text-secondary">Migration & Code Conversion</span>
+            </div>
+            <div>
+                <a href="/" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-house"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-arrow-left-right"></i> AI-Powered Code Migration
+                        </h5>
+
+                        <!-- Platform Selection -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Source Platform Type</label>
+                                <select class="form-select" id="source-type">
+                                    <option value="sql">SQL Database</option>
+                                    <option value="etl">ETL Tool</option>
+                                    <option value="mainframe">Mainframe</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Source Platform</label>
+                                <select class="form-select" id="source-platform">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Target Platform</label>
+                                <select class="form-select" id="target-platform">
+                                    <option value="SQL">Optimized SQL</option>
+                                    <option value="Spark">Apache Spark (PySpark)</option>
+                                    <option value="Databricks">Databricks</option>
+                                    <option value="NeuroLake">NeuroLake (NCF)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Code Editors -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Source Code</label>
+                                <div id="source-editor" style="height: 400px; border: 1px solid var(--border-color);"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Converted Code</label>
+                                <div id="result-editor" style="height: 400px; border: 1px solid var(--border-color);"></div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button class="btn btn-primary btn-lg me-2" id="convert-btn">
+                                    <i class="bi bi-magic"></i> Convert Code
+                                </button>
+                                <button class="btn btn-success btn-lg me-2" id="validate-btn" disabled>
+                                    <i class="bi bi-check-circle"></i> Validate Conversion
+                                </button>
+                                <button class="btn btn-outline-light btn-lg" id="clear-btn">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="results" class="mt-4" style="display: none;">
+                            <div class="alert" id="result-alert"></div>
+                            <div id="validation-results"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform Info Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Supported Platforms</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-secondary">SQL Databases (7)</h6>
+                                <small>Oracle, MS SQL Server, PostgreSQL, MySQL, DB2, Teradata, Snowflake</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-secondary">ETL Tools (16)</h6>
+                                <small>Talend, DataStage, Informatica, SSIS, SAP BODS, ODI, SAS, InfoSphere, Alteryx, SnapLogic, Matillion, ADF, AWS Glue, NiFi, Airflow, StreamSets</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-secondary">Mainframe (4)</h6>
+                                <small>COBOL, JCL, REXX, PL/I</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    <script>
+        let sourceEditor, resultEditor;
+        let platforms = {};
+
+        // Initialize Monaco Editor
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+        require(['vs/editor/editor.main'], function() {
+            sourceEditor = monaco.editor.create(document.getElementById('source-editor'), {
+                value: '-- Paste your source code here\nSELECT * FROM users WHERE id = 1;',
+                language: 'sql',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false }
+            });
+
+            resultEditor = monaco.editor.create(document.getElementById('result-editor'), {
+                value: '-- Converted code will appear here',
+                language: 'python',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                readOnly: true
+            });
+        });
+
+        // Load platforms
+        async function loadPlatforms() {
+            try {
+                const response = await fetch('/api/migration/platforms');
+                const data = await response.json();
+                platforms = data.source_platforms;
+                updateSourcePlatforms();
+            } catch (error) {
+                console.error('Error loading platforms:', error);
+            }
+        }
+
+        // Update source platform dropdown
+        function updateSourcePlatforms() {
+            const sourceType = document.getElementById('source-type').value;
+            const sourcePlatform = document.getElementById('source-platform');
+            sourcePlatform.innerHTML = '';
+
+            const platformList = platforms[sourceType] || [];
+            platformList.forEach(platform => {
+                const option = document.createElement('option');
+                option.value = platform;
+                option.textContent = platform;
+                sourcePlatform.appendChild(option);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('source-type').addEventListener('change', updateSourcePlatforms);
+
+        document.getElementById('convert-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('convert-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Converting...';
+
+            try {
+                const formData = new FormData();
+                formData.append('source_code', sourceEditor.getValue());
+                formData.append('source_platform', document.getElementById('source-platform').value);
+                formData.append('target_platform', document.getElementById('target-platform').value);
+                formData.append('source_type', document.getElementById('source-type').value);
+
+                const response = await fetch('/api/migration/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    resultEditor.setValue(data.converted_code);
+                    document.getElementById('validate-btn').disabled = false;
+                    showAlert('success', 'Code converted successfully!');
+                } else {
+                    showAlert('error', `Error: ${data.message}`);
+                }
+            } catch (error) {
+                showAlert('error', `Error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+
+        document.getElementById('validate-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('validate-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validating...';
+
+            try {
+                const formData = new FormData();
+                formData.append('original_code', sourceEditor.getValue());
+                formData.append('converted_code', resultEditor.getValue());
+                formData.append('source_platform', document.getElementById('source-platform').value);
+                formData.append('target_platform', document.getElementById('target-platform').value);
+
+                const response = await fetch('/api/migration/validate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const accuracy = (data.accuracy_score * 100).toFixed(1);
+                    const status = data.passed ? 'success' : 'warning';
+                    showAlert(status, `Validation Complete! Accuracy: ${accuracy}%`);
+
+                    // Show validation details
+                    if (data.validation) {
+                        const details = document.getElementById('validation-results');
+                        details.innerHTML = `
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h6>Validation Results</h6>
+                                    <pre class="text-light">${JSON.stringify(data.validation, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    showAlert('error', `Error: ${data.message}`);
+                }
+            } catch (error) {
+                showAlert('error', `Error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            sourceEditor.setValue('-- Paste your source code here');
+            resultEditor.setValue('-- Converted code will appear here');
+            document.getElementById('validate-btn').disabled = true;
+            document.getElementById('results').style.display = 'none';
+        });
+
+        function showAlert(type, message) {
+            const results = document.getElementById('results');
+            const alert = document.getElementById('result-alert');
+            results.style.display = 'block';
+            alert.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'warning'}`;
+            alert.textContent = message;
+        }
+
+        // Initialize
+        loadPlatforms();
+    </script>
+</body>
+</html>

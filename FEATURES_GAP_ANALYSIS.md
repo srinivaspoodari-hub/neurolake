@@ -335,7 +335,10 @@
 
 3. **API Endpoints Needed:**
    ```
-   POST /api/query/execute
+   POST /api/query/
+   
+   
+   
    POST /api/query/explain
    POST /api/ai/chat
    POST /api/ai/suggest

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLake Notebook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .notebook-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .cell {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .cell:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .cell-toolbar {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .cell-editor {
+            min-height: 150px;
+            border: none;
+        }
+        .cell-output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .cell-output.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .cell-output.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .language-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .add-cell-btn {
+            width: 100%;
+            border: 2px dashed #dee2e6;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        .add-cell-btn:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .notebook-list-item {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .notebook-list-item:hover {
+            background: #f8f9fa;
+            padding-left: 15px;
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-running {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+        .status-idle {
+            background: #6c757d;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .output-visualization {
+            margin-top: 10px;
+            min-height: 300px;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="notebook-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2><i class="fas fa-book"></i> NeuroLake Notebook</h2>
+                    <p class="mb-0" id="notebook-name">Untitled Notebook</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-light me-2" onclick="saveNotebook()">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button class="btn btn-light me-2" onclick="exportNotebook('jupyter')">
+                        <i class="fas fa-download"></i> Export to Jupyter
+                    </button>
+                    <button class="btn btn-light me-2" onclick="exportNotebook('html')">
+                        <i class="fas fa-file-code"></i> Export to HTML
+                    </button>
+                    <button class="btn btn-success" onclick="runAllCells()">
+                        <i class="fas fa-play"></i> Run All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <h5><i class="fas fa-folder"></i> Notebooks</h5>
+                    <div id="notebook-list">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <p class="mb-0 mt-2 text-muted">Loading...</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" onclick="createNotebook()">
+                        <i class="fas fa-plus"></i> New Notebook
+                    </button>
+                </div>
+
+                <div class="sidebar mt-3">
+                    <h5><i class="fas fa-info-circle"></i> Notebook Info</h5>
+                    <div class="mb-2">
+                        <small class="text-muted">Status:</small><br>
+                        <span class="status-indicator status-idle" id="status-indicator"></span>
+                        <span id="status-text">Idle</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Cells:</small><br>
+                        <strong id="cell-count">0</strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Last Saved:</small><br>
+                        <small id="last-saved">Never</small>
+                    </div>
+                </div>
+
+                <div class="sidebar mt-3">
+                    <h5><i class="fas fa-palette"></i> Features</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoComplete" checked>
+                        <label class="form-check-label" for="autoComplete">
+                            AI Code Completion
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="queryOptimization" checked>
+                        <label class="form-check-label" for="queryOptimization">
+                            Query Optimization
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="dataQuality" checked>
+                        <label class="form-check-label" for="dataQuality">
+                            Data Quality Checks
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="complianceCheck" checked>
+                        <label class="form-check-label" for="complianceCheck">
+                            Compliance Checks
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div id="cells-container">
+                    <!-- Cells will be added here dynamically -->
+                </div>
+
+                <button class="add-cell-btn" onclick="addCell()">
+                    <i class="fas fa-plus-circle"></i> Add Cell
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentNotebook = null;
+        let cells = [];
+        let editors = {};
+
+        // Initialize Monaco Editor
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
+
+        // Load notebooks on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadNotebookList();
+        });
+
+        async function loadNotebookList() {
+            try {
+                const response = await fetch('/api/notebook/list');
+                const data = await response.json();
+
+                const listContainer = document.getElementById('notebook-list');
+                listContainer.innerHTML = '';
+
+                if (data.notebooks && data.notebooks.length > 0) {
+                    data.notebooks.forEach(nb => {
+                        const item = document.createElement('div');
+                        item.className = 'notebook-list-item';
+                        item.innerHTML = `
+                            <i class="fas fa-book me-2"></i>
+                            ${nb.name}
+                            <br>
+                            <small class="text-muted">${nb.cell_count || 0} cells</small>
+                        `;
+                        item.onclick = () => loadNotebook(nb.notebook_id);
+                        listContainer.appendChild(item);
+                    });
+                } else {
+                    listContainer.innerHTML = '<p class="text-muted text-center">No notebooks yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading notebooks:', error);
+                document.getElementById('notebook-list').innerHTML = '<p class="text-danger">Error loading notebooks</p>';
+            }
+        }
+
+        async function createNotebook() {
+            const name = prompt('Enter notebook name:', 'Untitled Notebook');
+            if (!name) return;
+
+            try {
+                const response = await fetch('/api/notebook/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentNotebook = data.notebook_id;
+                    document.getElementById('notebook-name').textContent = name;
+                    cells = [];
+                    document.getElementById('cells-container').innerHTML = '';
+                    updateCellCount();
+                    loadNotebookList();
+                    addCell(); // Add first cell
+                }
+            } catch (error) {
+                console.error('Error creating notebook:', error);
+                alert('Error creating notebook');
+            }
+        }
+
+        async function loadNotebook(notebookId) {
+            try {
+                const response = await fetch(`/api/notebook/${notebookId}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentNotebook = notebookId;
+                    document.getElementById('notebook-name').textContent = data.notebook.name;
+                    cells = data.notebook.cells || [];
+                    renderCells();
+                    updateCellCount();
+                }
+            } catch (error) {
+                console.error('Error loading notebook:', error);
+                alert('Error loading notebook');
+            }
+        }
+
+        function addCell(language = 'python') {
+            if (!currentNotebook) {
+                alert('Please create or open a notebook first');
+                return;
+            }
+
+            const cellId = 'cell-' + Date.now();
+            const cell = {
+                id: cellId,
+                language: language,
+                code: '',
+                output: null
+            };
+
+            cells.push(cell);
+            renderCell(cell, cells.length - 1);
+            updateCellCount();
+
+            // Add cell to backend
+            fetch(`/api/notebook/${currentNotebook}/cell`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language, code: '' })
+            });
+        }
+
+        function renderCells() {
+            const container = document.getElementById('cells-container');
+            container.innerHTML = '';
+            cells.forEach((cell, index) => renderCell(cell, index));
+        }
+
+        function renderCell(cell, index) {
+            const container = document.getElementById('cells-container');
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell';
+            cellDiv.id = cell.id;
+            cellDiv.innerHTML = `
+                <div class="cell-toolbar">
+                    <div>
+                        <span class="language-badge">${cell.language.toUpperCase()}</span>
+                        <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="changeLanguage(${index}, this.value)">
+                            <option value="python" ${cell.language === 'python' ? 'selected' : ''}>Python</option>
+                            <option value="sql" ${cell.language === 'sql' ? 'selected' : ''}>SQL</option>
+                            <option value="scala" ${cell.language === 'scala' ? 'selected' : ''}>Scala</option>
+                            <option value="r" ${cell.language === 'r' ? 'selected' : ''}>R</option>
+                            <option value="shell" ${cell.language === 'shell' ? 'selected' : ''}>Shell</option>
+                            <option value="nlp" ${cell.language === 'nlp' ? 'selected' : ''}>NLP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-success" onclick="runCell(${index})" title="Run Cell">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="moveCell(${index}, -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="moveCell(${index}, 1)" title="Move Down" ${index === cells.length - 1 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCell(${index})" title="Delete Cell">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="cell-editor" id="${cell.id}-editor"></div>
+                <div class="cell-output" id="${cell.id}-output" style="display: none;"></div>
+            `;
+
+            container.appendChild(cellDiv);
+
+            // Initialize Monaco Editor
+            require(['vs/editor/editor.main'], function() {
+                const languageMap = {
+                    'python': 'python',
+                    'sql': 'sql',
+                    'scala': 'scala',
+                    'r': 'r',
+                    'shell': 'shell',
+                    'nlp': 'plaintext'
+                };
+
+                editors[cell.id] = monaco.editor.create(document.getElementById(`${cell.id}-editor`), {
+                    value: cell.code || '',
+                    language: languageMap[cell.language] || 'python',
+                    theme: 'vs-dark',
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    automaticLayout: true
+                });
+
+                // Auto-save on change
+                editors[cell.id].onDidChangeModelContent(() => {
+                    cells[index].code = editors[cell.id].getValue();
+                });
+            });
+
+            // Show existing output if any
+            if (cell.output) {
+                displayOutput(cell.id, cell.output);
+            }
+        }
+
+        async function runCell(index) {
+            const cell = cells[index];
+            const code = editors[cell.id].getValue();
+
+            setStatus('running', 'Running...');
+            const outputDiv = document.getElementById(`${cell.id}-output`);
+            outputDiv.style.display = 'block';
+            outputDiv.className = 'cell-output';
+            outputDiv.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Executing...';
+
+            try {
+                const response = await fetch(`/api/notebook/${currentNotebook}/execute/${cell.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cell_id: cell.id, context: {} })
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    displayOutput(cell.id, data.execution_result);
+                    cell.output = data.execution_result;
+                } else {
+                    outputDiv.className = 'cell-output error';
+                    outputDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: ${data.message || 'Execution failed'}`;
+                }
+            } catch (error) {
+                console.error('Error executing cell:', error);
+                outputDiv.className = 'cell-output error';
+                outputDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: ${error.message}`;
+            }
+
+            setStatus('idle', 'Idle');
+        }
+
+        function displayOutput(cellId, output) {
+            const outputDiv = document.getElementById(`${cellId}-output`);
+            outputDiv.style.display = 'block';
+
+            if (output.status === 'success') {
+                outputDiv.className = 'cell-output success';
+                let html = `<strong><i class="fas fa-check-circle"></i> Success</strong><br>`;
+
+                if (output.output) {
+                    html += `<pre>${JSON.stringify(output.output, null, 2)}</pre>`;
+                }
+
+                if (output.execution_time_ms) {
+                    html += `<small class="text-muted">Executed in ${output.execution_time_ms}ms</small>`;
+                }
+
+                outputDiv.innerHTML = html;
+
+                // Check if output contains data for visualization
+                if (output.output && Array.isArray(output.output)) {
+                    addVisualization(cellId, output.output);
+                }
+            } else {
+                outputDiv.className = 'cell-output error';
+                outputDiv.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> Error</strong><br><pre>${output.error || 'Unknown error'}</pre>`;
+            }
+        }
+
+        function addVisualization(cellId, data) {
+            const outputDiv = document.getElementById(`${cellId}-output`);
+            const vizDiv = document.createElement('div');
+            vizDiv.className = 'output-visualization';
+            vizDiv.id = `${cellId}-viz`;
+            outputDiv.appendChild(vizDiv);
+
+            // Simple bar chart example
+            if (data.length > 0 && data.length < 100) {
+                const keys = Object.keys(data[0]);
+                if (keys.length >= 2) {
+                    const trace = {
+                        x: data.map(d => d[keys[0]]),
+                        y: data.map(d => d[keys[1]]),
+                        type: 'bar'
+                    };
+                    Plotly.newPlot(vizDiv.id, [trace], {
+                        margin: { t: 20, b: 40, l: 40, r: 20 }
+                    });
+                }
+            }
+        }
+
+        async function runAllCells() {
+            setStatus('running', 'Running all cells...');
+            for (let i = 0; i < cells.length; i++) {
+                await runCell(i);
+            }
+            setStatus('idle', 'Idle');
+        }
+
+        function deleteCell(index) {
+            if (confirm('Delete this cell?')) {
+                const cell = cells[index];
+                if (editors[cell.id]) {
+                    editors[cell.id].dispose();
+                    delete editors[cell.id];
+                }
+                cells.splice(index, 1);
+                renderCells();
+                updateCellCount();
+            }
+        }
+
+        function moveCell(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= cells.length) return;
+
+            [cells[index], cells[newIndex]] = [cells[newIndex], cells[index]];
+            renderCells();
+        }
+
+        function changeLanguage(index, language) {
+            cells[index].language = language;
+            renderCells();
+        }
+
+        async function saveNotebook() {
+            if (!currentNotebook) {
+                alert('No notebook to save');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/notebook/${currentNotebook}/save`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('last-saved').textContent = new Date().toLocaleTimeString();
+                    alert('Notebook saved successfully!');
+                }
+            } catch (error) {
+                console.error('Error saving notebook:', error);
+                alert('Error saving notebook');
+            }
+        }
+
+        async function exportNotebook(format) {
+            if (!currentNotebook) {
+                alert('No notebook to export');
+                return;
+            }
+
+            alert(`Export to ${format.toUpperCase()} - Coming soon!`);
+            // TODO: Implement export functionality
+        }
+
+        function setStatus(status, text) {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+
+            indicator.className = 'status-indicator status-' + status;
+            statusText.textContent = text;
+        }
+
+        function updateCellCount() {
+            document.getElementById('cell-count').textContent = cells.length;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

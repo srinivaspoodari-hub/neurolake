@@ -1,0 +1,200 @@
+{
+  "assets": {
+    "table_production_public_customers": {
+      "asset_id": "table_production_public_customers",
+      "asset_type": "table",
+      "name": "customers",
+      "fully_qualified_name": "production.public.customers",
+      "database": "production",
+      "schema": "public",
+      "description": "Customer data",
+      "owner": "",
+      "columns": [
+        {
+          "name": "customer_id",
+          "type": "int"
+        }
+      ],
+      "tags": [
+        "production"
+      ],
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:33.987270",
+      "updated_at": "2025-11-05T17:00:33.987279",
+      "access_count": 0,
+      "last_accessed": null
+    },
+    "table_production_public_customers_col_customer_id": {
+      "asset_id": "table_production_public_customers_col_customer_id",
+      "asset_type": "column",
+      "name": "customer_id",
+      "table_id": "table_production_public_customers",
+      "data_type": "int",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:33.987291",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_first_name": {
+      "asset_id": "table_production_public_customers_col_first_name",
+      "asset_type": "column",
+      "name": "first_name",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "Customer first name",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.126539",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_last_name": {
+      "asset_id": "table_production_public_customers_col_last_name",
+      "asset_type": "column",
+      "name": "last_name",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "Customer last name",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.127286",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_email": {
+      "asset_id": "table_production_public_customers_col_email",
+      "asset_type": "column",
+      "name": "email",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "Customer email address",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.128034",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_phone": {
+      "asset_id": "table_production_public_customers_col_phone",
+      "asset_type": "column",
+      "name": "phone",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "Customer phone number",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.128815",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_address": {
+      "asset_id": "table_production_public_customers_col_address",
+      "asset_type": "column",
+      "name": "address",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "Customer mailing address",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.129499",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_city": {
+      "asset_id": "table_production_public_customers_col_city",
+      "asset_type": "column",
+      "name": "city",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.130199",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_state": {
+      "asset_id": "table_production_public_customers_col_state",
+      "asset_type": "column",
+      "name": "state",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.130983",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_zip_code": {
+      "asset_id": "table_production_public_customers_col_zip_code",
+      "asset_type": "column",
+      "name": "zip_code",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.131770",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_country": {
+      "asset_id": "table_production_public_customers_col_country",
+      "asset_type": "column",
+      "name": "country",
+      "table_id": "table_production_public_customers",
+      "data_type": "string",
+      "description": "",
+      "nullable": true,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.132569",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_created_at": {
+      "asset_id": "table_production_public_customers_col_created_at",
+      "asset_type": "column",
+      "name": "created_at",
+      "table_id": "table_production_public_customers",
+      "data_type": "timestamp",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.133342",
+      "sensitive": false,
+      "business_term": null
+    },
+    "table_production_public_customers_col_updated_at": {
+      "asset_id": "table_production_public_customers_col_updated_at",
+      "asset_type": "column",
+      "name": "updated_at",
+      "table_id": "table_production_public_customers",
+      "data_type": "timestamp",
+      "description": "",
+      "nullable": false,
+      "metadata": {},
+      "created_at": "2025-11-05T17:00:08.134182",
+      "sensitive": false,
+      "business_term": null
+    }
+  },
+  "tags": {
+    "production": [
+      "table_production_public_customers"
+    ],
+    "customers": [
+      "table_production_public_customers"
+    ],
+    "core": [
+      "table_production_public_customers"
+    ],
+    "pii": [
+      "table_production_public_customers"
+    ]
+  },
+  "lineage": {},
+  "business_glossary": {}
+}

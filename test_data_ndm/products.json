@@ -1,0 +1,142 @@
+[
+  {
+    "product_id": 1,
+    "product_name": "Product A",
+    "category": "Electronics",
+    "price": 10.0,
+    "stock": 100
+  },
+  {
+    "product_id": 2,
+    "product_name": "Product B",
+    "category": "Clothing",
+    "price": 15.5,
+    "stock": 110
+  },
+  {
+    "product_id": 3,
+    "product_name": "Product C",
+    "category": "Food",
+    "price": 21.0,
+    "stock": 120
+  },
+  {
+    "product_id": 4,
+    "product_name": "Product D",
+    "category": "Books",
+    "price": 26.5,
+    "stock": 130
+  },
+  {
+    "product_id": 5,
+    "product_name": "Product E",
+    "category": "Electronics",
+    "price": 32.0,
+    "stock": 140
+  },
+  {
+    "product_id": 6,
+    "product_name": "Product F",
+    "category": "Clothing",
+    "price": 37.5,
+    "stock": 150
+  },
+  {
+    "product_id": 7,
+    "product_name": "Product G",
+    "category": "Food",
+    "price": 43.0,
+    "stock": 160
+  },
+  {
+    "product_id": 8,
+    "product_name": "Product H",
+    "category": "Books",
+    "price": 48.5,
+    "stock": 170
+  },
+  {
+    "product_id": 9,
+    "product_name": "Product I",
+    "category": "Electronics",
+    "price": 54.0,
+    "stock": 180
+  },
+  {
+    "product_id": 10,
+    "product_name": "Product J",
+    "category": "Clothing",
+    "price": 59.5,
+    "stock": 190
+  },
+  {
+    "product_id": 11,
+    "product_name": "Product K",
+    "category": "Food",
+    "price": 65.0,
+    "stock": 200
+  },
+  {
+    "product_id": 12,
+    "product_name": "Product L",
+    "category": "Books",
+    "price": 70.5,
+    "stock": 210
+  },
+  {
+    "product_id": 13,
+    "product_name": "Product M",
+    "category": "Electronics",
+    "price": 76.0,
+    "stock": 220
+  },
+  {
+    "product_id": 14,
+    "product_name": "Product N",
+    "category": "Clothing",
+    "price": 81.5,
+    "stock": 230
+  },
+  {
+    "product_id": 15,
+    "product_name": "Product O",
+    "category": "Food",
+    "price": 87.0,
+    "stock": 240
+  },
+  {
+    "product_id": 16,
+    "product_name": "Product P",
+    "category": "Books",
+    "price": 92.5,
+    "stock": 250
+  },
+  {
+    "product_id": 17,
+    "product_name": "Product Q",
+    "category": "Electronics",
+    "price": 98.0,
+    "stock": 260
+  },
+  {
+    "product_id": 18,
+    "product_name": "Product R",
+    "category": "Clothing",
+    "price": 103.5,
+    "stock": 270
+  },
+  {
+    "product_id": 19,
+    "product_name": "Product S",
+    "category": "Food",
+    "price": 109.0,
+    "stock": 280
+  },
+  {
+    "product_id": 20,
+    "product_name": "Product T",
+    "category": "Books",
+    "price": 114.5,
+    "stock": 290
+  }
+]

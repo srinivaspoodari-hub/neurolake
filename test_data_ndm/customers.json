@@ -1,0 +1,902 @@
+[
+  {
+    "customer_id": 1,
+    "first_name": "Customer1",
+    "last_name": "Lastname1",
+    "email": "customer1@example.com",
+    "ssn": "123-45-6789",
+    "phone": "555-1000",
+    "created_at": "2024-01-01"
+  },
+  {
+    "customer_id": 2,
+    "first_name": "Customer2",
+    "last_name": "Lastname2",
+    "email": "customer2@example.com",
+    "ssn": "123-45-6790",
+    "phone": "555-1001",
+    "created_at": "2024-02-02"
+  },
+  {
+    "customer_id": 3,
+    "first_name": "Customer3",
+    "last_name": "Lastname3",
+    "email": "customer3@example.com",
+    "ssn": "123-45-6791",
+    "phone": "555-1002",
+    "created_at": "2024-03-03"
+  },
+  {
+    "customer_id": 4,
+    "first_name": "Customer4",
+    "last_name": "Lastname4",
+    "email": "customer4@example.com",
+    "ssn": "123-45-6792",
+    "phone": "555-1003",
+    "created_at": "2024-04-04"
+  },
+  {
+    "customer_id": 5,
+    "first_name": "Customer5",
+    "last_name": "Lastname5",
+    "email": "customer5@example.com",
+    "ssn": "123-45-6793",
+    "phone": "555-1004",
+    "created_at": "2024-05-05"
+  },
+  {
+    "customer_id": 6,
+    "first_name": "Customer6",
+    "last_name": "Lastname6",
+    "email": "customer6@example.com",
+    "ssn": "123-45-6794",
+    "phone": "555-1005",
+    "created_at": "2024-06-06"
+  },
+  {
+    "customer_id": 7,
+    "first_name": "Customer7",
+    "last_name": "Lastname7",
+    "email": "customer7@example.com",
+    "ssn": "123-45-6795",
+    "phone": "555-1006",
+    "created_at": "2024-07-07"
+  },
+  {
+    "customer_id": 8,
+    "first_name": "Customer8",
+    "last_name": "Lastname8",
+    "email": "customer8@example.com",
+    "ssn": "123-45-6796",
+    "phone": "555-1007",
+    "created_at": "2024-08-08"
+  },
+  {
+    "customer_id": 9,
+    "first_name": "Customer9",
+    "last_name": "Lastname9",
+    "email": "customer9@example.com",
+    "ssn": "123-45-6797",
+    "phone": "555-1008",
+    "created_at": "2024-09-09"
+  },
+  {
+    "customer_id": 10,
+    "first_name": "Customer10",
+    "last_name": "Lastname10",
+    "email": "customer10@example.com",
+    "ssn": "123-45-6798",
+    "phone": "555-1009",
+    "created_at": "2024-10-10"
+  },
+  {
+    "customer_id": 11,
+    "first_name": "Customer11",
+    "last_name": "Lastname11",
+    "email": "customer11@example.com",
+    "ssn": "123-45-6799",
+    "phone": "555-1010",
+    "created_at": "2024-11-11"
+  },
+  {
+    "customer_id": 12,
+    "first_name": "Customer12",
+    "last_name": "Lastname12",
+    "email": "customer12@example.com",
+    "ssn": "123-45-6800",
+    "phone": "555-1011",
+    "created_at": "2024-12-12"
+  },
+  {
+    "customer_id": 13,
+    "first_name": "Customer13",
+    "last_name": "Lastname13",
+    "email": "customer13@example.com",
+    "ssn": "123-45-6801",
+    "phone": "555-1012",
+    "created_at": "2024-01-13"
+  },
+  {
+    "customer_id": 14,
+    "first_name": "Customer14",
+    "last_name": "Lastname14",
+    "email": "customer14@example.com",
+    "ssn": "123-45-6802",
+    "phone": "555-1013",
+    "created_at": "2024-02-14"
+  },
+  {
+    "customer_id": 15,
+    "first_name": "Customer15",
+    "last_name": "Lastname15",
+    "email": "customer15@example.com",
+    "ssn": "123-45-6803",
+    "phone": "555-1014",
+    "created_at": "2024-03-15"
+  },
+  {
+    "customer_id": 16,
+    "first_name": "Customer16",
+    "last_name": "Lastname16",
+    "email": "customer16@example.com",
+    "ssn": "123-45-6804",
+    "phone": "555-1015",
+    "created_at": "2024-04-16"
+  },
+  {
+    "customer_id": 17,
+    "first_name": "Customer17",
+    "last_name": "Lastname17",
+    "email": "customer17@example.com",
+    "ssn": "123-45-6805",
+    "phone": "555-1016",
+    "created_at": "2024-05-17"
+  },
+  {
+    "customer_id": 18,
+    "first_name": "Customer18",
+    "last_name": "Lastname18",
+    "email": "customer18@example.com",
+    "ssn": "123-45-6806",
+    "phone": "555-1017",
+    "created_at": "2024-06-18"
+  },
+  {
+    "customer_id": 19,
+    "first_name": "Customer19",
+    "last_name": "Lastname19",
+    "email": "customer19@example.com",
+    "ssn": "123-45-6807",
+    "phone": "555-1018",
+    "created_at": "2024-07-19"
+  },
+  {
+    "customer_id": 20,
+    "first_name": "Customer20",
+    "last_name": "Lastname20",
+    "email": "customer20@example.com",
+    "ssn": "123-45-6808",
+    "phone": "555-1019",
+    "created_at": "2024-08-20"
+  },
+  {
+    "customer_id": 21,
+    "first_name": "Customer21",
+    "last_name": "Lastname21",
+    "email": "customer21@example.com",
+    "ssn": "123-45-6809",
+    "phone": "555-1020",
+    "created_at": "2024-09-21"
+  },
+  {
+    "customer_id": 22,
+    "first_name": "Customer22",
+    "last_name": "Lastname22",
+    "email": "customer22@example.com",
+    "ssn": "123-45-6810",
+    "phone": "555-1021",
+    "created_at": "2024-10-22"
+  },
+  {
+    "customer_id": 23,
+    "first_name": "Customer23",
+    "last_name": "Lastname23",
+    "email": "customer23@example.com",
+    "ssn": "123-45-6811",
+    "phone": "555-1022",
+    "created_at": "2024-11-23"
+  },
+  {
+    "customer_id": 24,
+    "first_name": "Customer24",
+    "last_name": "Lastname24",
+    "email": "customer24@example.com",
+    "ssn": "123-45-6812",
+    "phone": "555-1023",
+    "created_at": "2024-12-24"
+  },
+  {
+    "customer_id": 25,
+    "first_name": "Customer25",
+    "last_name": "Lastname25",
+    "email": "customer25@example.com",
+    "ssn": "123-45-6813",
+    "phone": "555-1024",
+    "created_at": "2024-01-25"
+  },
+  {
+    "customer_id": 26,
+    "first_name": "Customer26",
+    "last_name": "Lastname26",
+    "email": "customer26@example.com",
+    "ssn": "123-45-6814",
+    "phone": "555-1025",
+    "created_at": "2024-02-26"
+  },
+  {
+    "customer_id": 27,
+    "first_name": "Customer27",
+    "last_name": "Lastname27",
+    "email": "customer27@example.com",
+    "ssn": "123-45-6815",
+    "phone": "555-1026",
+    "created_at": "2024-03-27"
+  },
+  {
+    "customer_id": 28,
+    "first_name": "Customer28",
+    "last_name": "Lastname28",
+    "email": "customer28@example.com",
+    "ssn": "123-45-6816",
+    "phone": "555-1027",
+    "created_at": "2024-04-28"
+  },
+  {
+    "customer_id": 29,
+    "first_name": "Customer29",
+    "last_name": "Lastname29",
+    "email": "customer29@example.com",
+    "ssn": "123-45-6817",
+    "phone": "555-1028",
+    "created_at": "2024-05-01"
+  },
+  {
+    "customer_id": 30,
+    "first_name": "Customer30",
+    "last_name": "Lastname30",
+    "email": "customer30@example.com",
+    "ssn": "123-45-6818",
+    "phone": "555-1029",
+    "created_at": "2024-06-02"
+  },
+  {
+    "customer_id": 31,
+    "first_name": "Customer31",
+    "last_name": "Lastname31",
+    "email": "customer31@example.com",
+    "ssn": "123-45-6819",
+    "phone": "555-1030",
+    "created_at": "2024-07-03"
+  },
+  {
+    "customer_id": 32,
+    "first_name": "Customer32",
+    "last_name": "Lastname32",
+    "email": "customer32@example.com",
+    "ssn": "123-45-6820",
+    "phone": "555-1031",
+    "created_at": "2024-08-04"
+  },
+  {
+    "customer_id": 33,
+    "first_name": "Customer33",
+    "last_name": "Lastname33",
+    "email": "customer33@example.com",
+    "ssn": "123-45-6821",
+    "phone": "555-1032",
+    "created_at": "2024-09-05"
+  },
+  {
+    "customer_id": 34,
+    "first_name": "Customer34",
+    "last_name": "Lastname34",
+    "email": "customer34@example.com",
+    "ssn": "123-45-6822",
+    "phone": "555-1033",
+    "created_at": "2024-10-06"
+  },
+  {
+    "customer_id": 35,
+    "first_name": "Customer35",
+    "last_name": "Lastname35",
+    "email": "customer35@example.com",
+    "ssn": "123-45-6823",
+    "phone": "555-1034",
+    "created_at": "2024-11-07"
+  },
+  {
+    "customer_id": 36,
+    "first_name": "Customer36",
+    "last_name": "Lastname36",
+    "email": "customer36@example.com",
+    "ssn": "123-45-6824",
+    "phone": "555-1035",
+    "created_at": "2024-12-08"
+  },
+  {
+    "customer_id": 37,
+    "first_name": "Customer37",
+    "last_name": "Lastname37",
+    "email": "customer37@example.com",
+    "ssn": "123-45-6825",
+    "phone": "555-1036",
+    "created_at": "2024-01-09"
+  },
+  {
+    "customer_id": 38,
+    "first_name": "Customer38",
+    "last_name": "Lastname38",
+    "email": "customer38@example.com",
+    "ssn": "123-45-6826",
+    "phone": "555-1037",
+    "created_at": "2024-02-10"
+  },
+  {
+    "customer_id": 39,
+    "first_name": "Customer39",
+    "last_name": "Lastname39",
+    "email": "customer39@example.com",
+    "ssn": "123-45-6827",
+    "phone": "555-1038",
+    "created_at": "2024-03-11"
+  },
+  {
+    "customer_id": 40,
+    "first_name": "Customer40",
+    "last_name": "Lastname40",
+    "email": "customer40@example.com",
+    "ssn": "123-45-6828",
+    "phone": "555-1039",
+    "created_at": "2024-04-12"
+  },
+  {
+    "customer_id": 41,
+    "first_name": "Customer41",
+    "last_name": "Lastname41",
+    "email": "customer41@example.com",
+    "ssn": "123-45-6829",
+    "phone": "555-1040",
+    "created_at": "2024-05-13"
+  },
+  {
+    "customer_id": 42,
+    "first_name": "Customer42",
+    "last_name": "Lastname42",
+    "email": "customer42@example.com",
+    "ssn": "123-45-6830",
+    "phone": "555-1041",
+    "created_at": "2024-06-14"
+  },
+  {
+    "customer_id": 43,
+    "first_name": "Customer43",
+    "last_name": "Lastname43",
+    "email": "customer43@example.com",
+    "ssn": "123-45-6831",
+    "phone": "555-1042",
+    "created_at": "2024-07-15"
+  },
+  {
+    "customer_id": 44,
+    "first_name": "Customer44",
+    "last_name": "Lastname44",
+    "email": "customer44@example.com",
+    "ssn": "123-45-6832",
+    "phone": "555-1043",
+    "created_at": "2024-08-16"
+  },
+  {
+    "customer_id": 45,
+    "first_name": "Customer45",
+    "last_name": "Lastname45",
+    "email": "customer45@example.com",
+    "ssn": "123-45-6833",
+    "phone": "555-1044",
+    "created_at": "2024-09-17"
+  },
+  {
+    "customer_id": 46,
+    "first_name": "Customer46",
+    "last_name": "Lastname46",
+    "email": "customer46@example.com",
+    "ssn": "123-45-6834",
+    "phone": "555-1045",
+    "created_at": "2024-10-18"
+  },
+  {
+    "customer_id": 47,
+    "first_name": "Customer47",
+    "last_name": "Lastname47",
+    "email": "customer47@example.com",
+    "ssn": "123-45-6835",
+    "phone": "555-1046",
+    "created_at": "2024-11-19"
+  },
+  {
+    "customer_id": 48,
+    "first_name": "Customer48",
+    "last_name": "Lastname48",
+    "email": "customer48@example.com",
+    "ssn": "123-45-6836",
+    "phone": "555-1047",
+    "created_at": "2024-12-20"
+  },
+  {
+    "customer_id": 49,
+    "first_name": "Customer49",
+    "last_name": "Lastname49",
+    "email": "customer49@example.com",
+    "ssn": "123-45-6837",
+    "phone": "555-1048",
+    "created_at": "2024-01-21"
+  },
+  {
+    "customer_id": 50,
+    "first_name": "Customer50",
+    "last_name": "Lastname50",
+    "email": "customer50@example.com",
+    "ssn": "123-45-6838",
+    "phone": "555-1049",
+    "created_at": "2024-02-22"
+  },
+  {
+    "customer_id": 51,
+    "first_name": "Customer51",
+    "last_name": "Lastname51",
+    "email": "customer51@example.com",
+    "ssn": "123-45-6839",
+    "phone": "555-1050",
+    "created_at": "2024-03-23"
+  },
+  {
+    "customer_id": 52,
+    "first_name": "Customer52",
+    "last_name": "Lastname52",
+    "email": "customer52@example.com",
+    "ssn": "123-45-6840",
+    "phone": "555-1051",
+    "created_at": "2024-04-24"
+  },
+  {
+    "customer_id": 53,
+    "first_name": "Customer53",
+    "last_name": "Lastname53",
+    "email": "customer53@example.com",
+    "ssn": "123-45-6841",
+    "phone": "555-1052",
+    "created_at": "2024-05-25"
+  },
+  {
+    "customer_id": 54,
+    "first_name": "Customer54",
+    "last_name": "Lastname54",
+    "email": "customer54@example.com",
+    "ssn": "123-45-6842",
+    "phone": "555-1053",
+    "created_at": "2024-06-26"
+  },
+  {
+    "customer_id": 55,
+    "first_name": "Customer55",
+    "last_name": "Lastname55",
+    "email": "customer55@example.com",
+    "ssn": "123-45-6843",
+    "phone": "555-1054",
+    "created_at": "2024-07-27"
+  },
+  {
+    "customer_id": 56,
+    "first_name": "Customer56",
+    "last_name": "Lastname56",
+    "email": "customer56@example.com",
+    "ssn": "123-45-6844",
+    "phone": "555-1055",
+    "created_at": "2024-08-28"
+  },
+  {
+    "customer_id": 57,
+    "first_name": "Customer57",
+    "last_name": "Lastname57",
+    "email": "customer57@example.com",
+    "ssn": "123-45-6845",
+    "phone": "555-1056",
+    "created_at": "2024-09-01"
+  },
+  {
+    "customer_id": 58,
+    "first_name": "Customer58",
+    "last_name": "Lastname58",
+    "email": "customer58@example.com",
+    "ssn": "123-45-6846",
+    "phone": "555-1057",
+    "created_at": "2024-10-02"
+  },
+  {
+    "customer_id": 59,
+    "first_name": "Customer59",
+    "last_name": "Lastname59",
+    "email": "customer59@example.com",
+    "ssn": "123-45-6847",
+    "phone": "555-1058",
+    "created_at": "2024-11-03"
+  },
+  {
+    "customer_id": 60,
+    "first_name": "Customer60",
+    "last_name": "Lastname60",
+    "email": "customer60@example.com",
+    "ssn": "123-45-6848",
+    "phone": "555-1059",
+    "created_at": "2024-12-04"
+  },
+  {
+    "customer_id": 61,
+    "first_name": "Customer61",
+    "last_name": "Lastname61",
+    "email": "customer61@example.com",
+    "ssn": "123-45-6849",
+    "phone": "555-1060",
+    "created_at": "2024-01-05"
+  },
+  {
+    "customer_id": 62,
+    "first_name": "Customer62",
+    "last_name": "Lastname62",
+    "email": "customer62@example.com",
+    "ssn": "123-45-6850",
+    "phone": "555-1061",
+    "created_at": "2024-02-06"
+  },
+  {
+    "customer_id": 63,
+    "first_name": "Customer63",
+    "last_name": "Lastname63",
+    "email": "customer63@example.com",
+    "ssn": "123-45-6851",
+    "phone": "555-1062",
+    "created_at": "2024-03-07"
+  },
+  {
+    "customer_id": 64,
+    "first_name": "Customer64",
+    "last_name": "Lastname64",
+    "email": "customer64@example.com",
+    "ssn": "123-45-6852",
+    "phone": "555-1063",
+    "created_at": "2024-04-08"
+  },
+  {
+    "customer_id": 65,
+    "first_name": "Customer65",
+    "last_name": "Lastname65",
+    "email": "customer65@example.com",
+    "ssn": "123-45-6853",
+    "phone": "555-1064",
+    "created_at": "2024-05-09"
+  },
+  {
+    "customer_id": 66,
+    "first_name": "Customer66",
+    "last_name": "Lastname66",
+    "email": "customer66@example.com",
+    "ssn": "123-45-6854",
+    "phone": "555-1065",
+    "created_at": "2024-06-10"
+  },
+  {
+    "customer_id": 67,
+    "first_name": "Customer67",
+    "last_name": "Lastname67",
+    "email": "customer67@example.com",
+    "ssn": "123-45-6855",
+    "phone": "555-1066",
+    "created_at": "2024-07-11"
+  },
+  {
+    "customer_id": 68,
+    "first_name": "Customer68",
+    "last_name": "Lastname68",
+    "email": "customer68@example.com",
+    "ssn": "123-45-6856",
+    "phone": "555-1067",
+    "created_at": "2024-08-12"
+  },
+  {
+    "customer_id": 69,
+    "first_name": "Customer69",
+    "last_name": "Lastname69",
+    "email": "customer69@example.com",
+    "ssn": "123-45-6857",
+    "phone": "555-1068",
+    "created_at": "2024-09-13"
+  },
+  {
+    "customer_id": 70,
+    "first_name": "Customer70",
+    "last_name": "Lastname70",
+    "email": "customer70@example.com",
+    "ssn": "123-45-6858",
+    "phone": "555-1069",
+    "created_at": "2024-10-14"
+  },
+  {
+    "customer_id": 71,
+    "first_name": "Customer71",
+    "last_name": "Lastname71",
+    "email": "customer71@example.com",
+    "ssn": "123-45-6859",
+    "phone": "555-1070",
+    "created_at": "2024-11-15"
+  },
+  {
+    "customer_id": 72,
+    "first_name": "Customer72",
+    "last_name": "Lastname72",
+    "email": "customer72@example.com",
+    "ssn": "123-45-6860",
+    "phone": "555-1071",
+    "created_at": "2024-12-16"
+  },
+  {
+    "customer_id": 73,
+    "first_name": "Customer73",
+    "last_name": "Lastname73",
+    "email": "customer73@example.com",
+    "ssn": "123-45-6861",
+    "phone": "555-1072",
+    "created_at": "2024-01-17"
+  },
+  {
+    "customer_id": 74,
+    "first_name": "Customer74",
+    "last_name": "Lastname74",
+    "email": "customer74@example.com",
+    "ssn": "123-45-6862",
+    "phone": "555-1073",
+    "created_at": "2024-02-18"
+  },
+  {
+    "customer_id": 75,
+    "first_name": "Customer75",
+    "last_name": "Lastname75",
+    "email": "customer75@example.com",
+    "ssn": "123-45-6863",
+    "phone": "555-1074",
+    "created_at": "2024-03-19"
+  },
+  {
+    "customer_id": 76,
+    "first_name": "Customer76",
+    "last_name": "Lastname76",
+    "email": "customer76@example.com",
+    "ssn": "123-45-6864",
+    "phone": "555-1075",
+    "created_at": "2024-04-20"
+  },
+  {
+    "customer_id": 77,
+    "first_name": "Customer77",
+    "last_name": "Lastname77",
+    "email": "customer77@example.com",
+    "ssn": "123-45-6865",
+    "phone": "555-1076",
+    "created_at": "2024-05-21"
+  },
+  {
+    "customer_id": 78,
+    "first_name": "Customer78",
+    "last_name": "Lastname78",
+    "email": "customer78@example.com",
+    "ssn": "123-45-6866",
+    "phone": "555-1077",
+    "created_at": "2024-06-22"
+  },
+  {
+    "customer_id": 79,
+    "first_name": "Customer79",
+    "last_name": "Lastname79",
+    "email": "customer79@example.com",
+    "ssn": "123-45-6867",
+    "phone": "555-1078",
+    "created_at": "2024-07-23"
+  },
+  {
+    "customer_id": 80,
+    "first_name": "Customer80",
+    "last_name": "Lastname80",
+    "email": "customer80@example.com",
+    "ssn": "123-45-6868",
+    "phone": "555-1079",
+    "created_at": "2024-08-24"
+  },
+  {
+    "customer_id": 81,
+    "first_name": "Customer81",
+    "last_name": "Lastname81",
+    "email": "customer81@example.com",
+    "ssn": "123-45-6869",
+    "phone": "555-1080",
+    "created_at": "2024-09-25"
+  },
+  {
+    "customer_id": 82,
+    "first_name": "Customer82",
+    "last_name": "Lastname82",
+    "email": "customer82@example.com",
+    "ssn": "123-45-6870",
+    "phone": "555-1081",
+    "created_at": "2024-10-26"
+  },
+  {
+    "customer_id": 83,
+    "first_name": "Customer83",
+    "last_name": "Lastname83",
+    "email": "customer83@example.com",
+    "ssn": "123-45-6871",
+    "phone": "555-1082",
+    "created_at": "2024-11-27"
+  },
+  {
+    "customer_id": 84,
+    "first_name": "Customer84",
+    "last_name": "Lastname84",
+    "email": "customer84@example.com",
+    "ssn": "123-45-6872",
+    "phone": "555-1083",
+    "created_at": "2024-12-28"
+  },
+  {
+    "customer_id": 85,
+    "first_name": "Customer85",
+    "last_name": "Lastname85",
+    "email": "customer85@example.com",
+    "ssn": "123-45-6873",
+    "phone": "555-1084",
+    "created_at": "2024-01-01"
+  },
+  {
+    "customer_id": 86,
+    "first_name": "Customer86",
+    "last_name": "Lastname86",
+    "email": "customer86@example.com",
+    "ssn": "123-45-6874",
+    "phone": "555-1085",
+    "created_at": "2024-02-02"
+  },
+  {
+    "customer_id": 87,
+    "first_name": "Customer87",
+    "last_name": "Lastname87",
+    "email": "customer87@example.com",
+    "ssn": "123-45-6875",
+    "phone": "555-1086",
+    "created_at": "2024-03-03"
+  },
+  {
+    "customer_id": 88,
+    "first_name": "Customer88",
+    "last_name": "Lastname88",
+    "email": "customer88@example.com",
+    "ssn": "123-45-6876",
+    "phone": "555-1087",
+    "created_at": "2024-04-04"
+  },
+  {
+    "customer_id": 89,
+    "first_name": "Customer89",
+    "last_name": "Lastname89",
+    "email": "customer89@example.com",
+    "ssn": "123-45-6877",
+    "phone": "555-1088",
+    "created_at": "2024-05-05"
+  },
+  {
+    "customer_id": 90,
+    "first_name": "Customer90",
+    "last_name": "Lastname90",
+    "email": "customer90@example.com",
+    "ssn": "123-45-6878",
+    "phone": "555-1089",
+    "created_at": "2024-06-06"
+  },
+  {
+    "customer_id": 91,
+    "first_name": "Customer91",
+    "last_name": "Lastname91",
+    "email": "customer91@example.com",
+    "ssn": "123-45-6879",
+    "phone": "555-1090",
+    "created_at": "2024-07-07"
+  },
+  {
+    "customer_id": 92,
+    "first_name": "Customer92",
+    "last_name": "Lastname92",
+    "email": "customer92@example.com",
+    "ssn": "123-45-6880",
+    "phone": "555-1091",
+    "created_at": "2024-08-08"
+  },
+  {
+    "customer_id": 93,
+    "first_name": "Customer93",
+    "last_name": "Lastname93",
+    "email": "customer93@example.com",
+    "ssn": "123-45-6881",
+    "phone": "555-1092",
+    "created_at": "2024-09-09"
+  },
+  {
+    "customer_id": 94,
+    "first_name": "Customer94",
+    "last_name": "Lastname94",
+    "email": "customer94@example.com",
+    "ssn": "123-45-6882",
+    "phone": "555-1093",
+    "created_at": "2024-10-10"
+  },
+  {
+    "customer_id": 95,
+    "first_name": "Customer95",
+    "last_name": "Lastname95",
+    "email": "customer95@example.com",
+    "ssn": "123-45-6883",
+    "phone": "555-1094",
+    "created_at": "2024-11-11"
+  },
+  {
+    "customer_id": 96,
+    "first_name": "Customer96",
+    "last_name": "Lastname96",
+    "email": "customer96@example.com",
+    "ssn": "123-45-6884",
+    "phone": "555-1095",
+    "created_at": "2024-12-12"
+  },
+  {
+    "customer_id": 97,
+    "first_name": "Customer97",
+    "last_name": "Lastname97",
+    "email": "customer97@example.com",
+    "ssn": "123-45-6885",
+    "phone": "555-1096",
+    "created_at": "2024-01-13"
+  },
+  {
+    "customer_id": 98,
+    "first_name": "Customer98",
+    "last_name": "Lastname98",
+    "email": "customer98@example.com",
+    "ssn": "123-45-6886",
+    "phone": "555-1097",
+    "created_at": "2024-02-14"
+  },
+  {
+    "customer_id": 99,
+    "first_name": "Customer99",
+    "last_name": "Lastname99",
+    "email": "customer99@example.com",
+    "ssn": "123-45-6887",
+    "phone": "555-1098",
+    "created_at": "2024-03-15"
+  },
+  {
+    "customer_id": 100,
+    "first_name": "Customer100",
+    "last_name": "Lastname100",
+    "email": "customer100@example.com",
+    "ssn": "123-45-6888",
+    "phone": "555-1099",
+    "created_at": "2024-04-16"
+  }
+]

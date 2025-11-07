@@ -13,7 +13,7 @@ RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
+  else echo "No lockfile found, generating with npm install..." && npm install; \
   fi
 
 
@@ -41,7 +41,7 @@ RUN \
   if [ -f yarn.lock ]; then yarn build; \
   elif [ -f package-lock.json ]; then npm run build; \
   elif [ -f pnpm-lock.yaml ]; then pnpm build; \
-  else echo "Lockfile not found." && exit 1; \
+  else npm run build; \
   fi
 
 

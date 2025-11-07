@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLake NDM + NUIC Integration UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1E1E1E;
+            color: #E3E3E3;
+        }
+        .section-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FF3621;
+        }
+        .feature-card {
+            background: #252525;
+            border: 1px solid #3A3A3A;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .feature-card:hover {
+            border-color: #FF3621;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FF3621;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #B8B8B8;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-success { background: #00A972; color: white; }
+        .status-warning { background: #FFA500; color: white; }
+        .status-error { background: #FF3621; color: white; }
+        .upload-zone {
+            border: 2px dashed #3A3A3A;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover {
+            border-color: #FF3621;
+            background: #2A2A2A;
+        }
+        .upload-zone.dragover {
+            border-color: #00A972;
+            background: #2A3A2A;
+        }
+        .catalog-item {
+            background: #252525;
+            border: 1px solid #3A3A3A;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .catalog-item:hover {
+            border-color: #FF3621;
+            transform: translateX(5px);
+        }
+        .quality-score {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: 3px solid;
+        }
+        .quality-high { border-color: #00A972; color: #00A972; }
+        .quality-medium { border-color: #FFA500; color: #FFA500; }
+        .quality-low { border-color: #FF3621; color: #FF3621; }
+        #lineage-canvas {
+            width: 100%;
+            height: 600px;
+            background: #1E1E1E;
+            border: 1px solid #3A3A3A;
+            border-radius: 8px;
+        }
+        .search-box {
+            background: #252525;
+            border: 1px solid #3A3A3A;
+            color: #E3E3E3;
+            padding: 10px 15px;
+            border-radius: 6px;
+            width: 100%;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #FF3621;
+        }
+        .filter-chip {
+            display: inline-block;
+            background: #3A3A3A;
+            color: #E3E3E3;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .filter-chip.active {
+            background: #FF3621;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+
+        <!-- FILE UPLOAD / DATA INGESTION SECTION -->
+        <section id="ingestion-section">
+            <div class="section-header">
+                <h2><i class="bi bi-cloud-upload-fill"></i> Data Ingestion</h2>
+                <p class="text-muted">Upload and ingest data files with AI-powered processing</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="feature-card">
+                        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                            <input type="file" id="file-input" style="display: none;" accept=".csv,.json,.parquet,.xlsx,.xls" multiple>
+                            <i class="bi bi-cloud-arrow-up" style="font-size: 3rem; color: #3A3A3A;"></i>
+                            <h4>Drop files here or click to browse</h4>
+                            <p class="text-muted">Supports: CSV, JSON, Parquet, Excel</p>
+                        </div>
+
+                        <div id="upload-config" style="margin-top: 20px; display: none;">
+                            <h5>Ingestion Configuration</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Dataset Name</label>
+                                    <input type="text" class="form-control search-box" id="dataset-name" placeholder="Auto-generated from filename">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Target Use Case</label>
+                                    <select class="form-control search-box" id="target-use-case">
+                                        <option value="analytics">Analytics</option>
+                                        <option value="ml">Machine Learning</option>
+                                        <option value="reporting">Reporting</option>
+                                        <option value="operational">Operational</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Quality Threshold</label>
+                                    <input type="range" class="form-range" id="quality-threshold" min="0" max="1" step="0.1" value="0.5">
+                                    <small class="text-muted">Minimum: <span id="threshold-value">0.5</span></small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-check-label">
+                                        <input type="checkbox" class="form-check-input" id="auto-transform" checked>
+                                        Auto-execute transformations
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="uploadAndIngest()">
+                                <i class="bi bi-upload"></i> Start Ingestion
+                            </button>
+                        </div>
+
+                        <div id="ingestion-progress" style="margin-top: 20px; display: none;">
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                            <p class="text-center mt-2" id="progress-text">Uploading...</p>
+                        </div>
+
+                        <div id="ingestion-results" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <h5><i class="bi bi-bar-chart-fill"></i> Ingestion Statistics</h5>
+                        <div id="ingestion-stats">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Total Files Ingested:</span>
+                                <span class="metric-value" style="font-size: 1.5rem;" id="total-files">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Total Rows:</span>
+                                <span class="metric-value" style="font-size: 1.5rem;" id="total-rows">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Avg Quality Score:</span>
+                                <span class="metric-value" style="font-size: 1.5rem;" id="avg-quality">0.0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Success Rate:</span>
+                                <span class="metric-value" style="font-size: 1.5rem;" id="success-rate">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card mt-3">
+                        <h5><i class="bi bi-clock-history"></i> Recent Ingestions</h5>
+                        <div id="recent-ingestions"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr style="border-color: #3A3A3A; margin: 40px 0;">
+
+        <!-- CATALOG BROWSER SECTION -->
+        <section id="catalog-section">
+            <div class="section-header">
+                <h2><i class="bi bi-collection"></i> Data Catalog</h2>
+                <p class="text-muted">Search and discover datasets with AI-powered insights</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="feature-card">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" style="background: #252525; border-color: #3A3A3A;">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="search-box" id="catalog-search" placeholder="Search datasets by name, tags, or columns..." onkeyup="searchCatalog()">
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Filters</h6>
+                            <span class="filter-chip active" onclick="toggleFilter(this, 'all')">All</span>
+                            <span class="filter-chip" onclick="toggleFilter(this, 'high-quality')">High Quality</span>
+                            <span class="filter-chip" onclick="toggleFilter(this, 'popular')">Popular</span>
+                            <span class="filter-chip" onclick="toggleFilter(this, 'recent')">Recent</span>
+                        </div>
+
+                        <div id="catalog-results"></div>
+
+                        <div class="text-center mt-3">
+                            <button class="btn btn-outline-light" onclick="loadMoreCatalog()">Load More</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <h5><i class="bi bi-trophy-fill"></i> Top Datasets</h5>
+                        <div id="popular-datasets"></div>
+                    </div>
+
+                    <div class="feature-card mt-3">
+                        <h5><i class="bi bi-gem"></i> Quality Leaders</h5>
+                        <div id="quality-leaders"></div>
+                    </div>
+
+                    <div class="feature-card mt-3">
+                        <h5><i class="bi bi-pie-chart-fill"></i> Catalog Stats</h5>
+                        <div id="catalog-stats-display"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr style="border-color: #3A3A3A; margin: 40px 0;">
+
+        <!-- DATA LINEAGE SECTION -->
+        <section id="lineage-section">
+            <div class="section-header">
+                <h2><i class="bi bi-bezier"></i> Data Lineage</h2>
+                <p class="text-muted">Visualize data flows and impact analysis</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label>Select Dataset</label>
+                        <select class="form-control search-box" id="lineage-dataset" onchange="loadLineage()">
+                            <option value="">-- Choose a dataset --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Direction</label>
+                        <select class="form-control search-box" id="lineage-direction">
+                            <option value="downstream">Downstream (consumers)</option>
+                            <option value="upstream">Upstream (sources)</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Max Depth</label>
+                        <input type="number" class="form-control search-box" id="lineage-depth" value="3" min="1" max="10">
+                    </div>
+                    <div class="col-md-3">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary w-100" onclick="loadLineage()">
+                            <i class="bi bi-diagram-3-fill"></i> Visualize
+                        </button>
+                    </div>
+                </div>
+
+                <div id="lineage-canvas"></div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="bi bi-exclamation-triangle-fill"></i> Impact Analysis</h6>
+                            <div id="impact-analysis"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="bi bi-clock-fill"></i> Data Freshness</h6>
+                            <div id="freshness-analysis"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr style="border-color: #3A3A3A; margin: 40px 0;">
+
+        <!-- SCHEMA EVOLUTION SECTION -->
+        <section id="schema-section">
+            <div class="section-header">
+                <h2><i class="bi bi-diagram-3"></i> Schema Evolution</h2>
+                <p class="text-muted">Track schema changes and analyze impact</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label>Select Dataset</label>
+                        <select class="form-control search-box" id="schema-dataset" onchange="loadSchemaHistory()">
+                            <option value="">-- Choose a dataset --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" onclick="loadSchemaHistory()">
+                            <i class="bi bi-clock-history"></i> View History
+                        </button>
+                    </div>
+                </div>
+
+                <div id="schema-history"></div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h6>Compare Versions</h6>
+                        <div class="row">
+                            <div class="col-md-5">
+                                <select class="form-control search-box" id="schema-version1">
+                                    <option value="">Version 1</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <i class="bi bi-arrow-left-right" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div class="col-md-5">
+                                <select class="form-control search-box" id="schema-version2">
+                                    <option value="">Version 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-2" onclick="compareSchemaVersions()">
+                            <i class="bi bi-git"></i> Compare
+                        </button>
+                    </div>
+                </div>
+
+                <div id="schema-comparison" class="mt-3"></div>
+            </div>
+        </section>
+
+        <hr style="border-color: #3A3A3A; margin: 40px 0;">
+
+        <!-- QUALITY METRICS SECTION -->
+        <section id="quality-section">
+            <div class="section-header">
+                <h2><i class="bi bi-graph-up-arrow"></i> Quality Metrics</h2>
+                <p class="text-muted">Monitor data quality trends and anomalies</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="feature-card">
+                        <div class="mb-3">
+                            <label>Select Dataset</label>
+                            <select class="form-control search-box" id="quality-dataset" onchange="loadQualityMetrics()">
+                                <option value="">-- Choose a dataset --</option>
+                            </select>
+                        </div>
+
+                        <canvas id="quality-chart" height="80"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <h5><i class="bi bi-speedometer2"></i> Current Score</h5>
+                        <div class="text-center">
+                            <div class="quality-score quality-high mx-auto" id="current-quality-score">0.0</div>
+                            <p class="mt-2 text-muted" id="quality-trend"></p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card mt-3">
+                        <h6>Quality Dimensions</h6>
+                        <div id="quality-dimensions"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap & Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================================
+        // FILE UPLOAD / DATA INGESTION
+        // ============================================================================
+
+        let selectedFile = null;
+
+        // Drag and drop
+        const uploadZone = document.getElementById('upload-zone');
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('file-input').files = files;
+                handleFileSelect();
+            }
+        });
+
+        document.getElementById('file-input').addEventListener('change', handleFileSelect);
+        document.getElementById('quality-threshold').addEventListener('input', (e) => {
+            document.getElementById('threshold-value').textContent = e.target.value;
+        });
+
+        function handleFileSelect() {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length > 0) {
+                selectedFile = fileInput.files[0];
+                document.getElementById('upload-config').style.display = 'block';
+                document.getElementById('dataset-name').placeholder = selectedFile.name.split('.')[0];
+            }
+        }
+
+        async function uploadAndIngest() {
+            if (!selectedFile) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('dataset_name', document.getElementById('dataset-name').value || '');
+            formData.append('target_use_case', document.getElementById('target-use-case').value);
+            formData.append('quality_threshold', document.getElementById('quality-threshold').value);
+            formData.append('auto_execute_transformations', document.getElementById('auto-transform').checked);
+
+            // Show progress
+            document.getElementById('upload-config').style.display = 'none';
+            document.getElementById('ingestion-progress').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/neurolake/ingestion/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                document.getElementById('ingestion-progress').style.display = 'none';
+
+                // Show results
+                const resultsDiv = document.getElementById('ingestion-results');
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="bi bi-check-circle-fill"></i> Ingestion Successful!</h5>
+                            <p><strong>Dataset:</strong> ${result.dataset_name}</p>
+                            <p><strong>Rows Ingested:</strong> ${result.rows_ingested}</p>
+                            <p><strong>Quality Score:</strong> ${(result.quality_score * 100).toFixed(1)}%</p>
+                            <p><strong>Routing Path:</strong> ${result.routing_path}</p>
+                            <p><strong>Storage Location:</strong> ${result.storage_location}</p>
+                            ${result.warnings.length > 0 ? '<p><strong>Warnings:</strong> ' + result.warnings.join(', ') + '</p>' : ''}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="bi bi-x-circle-fill"></i> Ingestion Failed</h5>
+                            <p><strong>Errors:</strong> ${result.errors.join(', ')}</p>
+                        </div>
+                    `;
+                }
+
+                // Refresh stats
+                loadIngestionStats();
+            } catch (error) {
+                document.getElementById('ingestion-progress').style.display = 'none';
+                alert('Error uploading file: ' + error.message);
+            }
+        }
+
+        async function loadIngestionStats() {
+            try {
+                const response = await fetch('/api/neurolake/ingestion/statistics');
+                const stats = await response.json();
+
+                document.getElementById('total-files').textContent = stats.total_files || 0;
+                document.getElementById('total-rows').textContent = (stats.total_rows || 0).toLocaleString();
+                document.getElementById('avg-quality').textContent = (stats.avg_quality_score || 0).toFixed(2);
+                document.getElementById('success-rate').textContent = ((stats.success_rate || 0) * 100).toFixed(0) + '%';
+            } catch (error) {
+                console.error('Error loading ingestion stats:', error);
+            }
+        }
+
+        // ============================================================================
+        // CATALOG BROWSER
+        // ============================================================================
+
+        let catalogOffset = 0;
+        let catalogFilter = 'all';
+
+        async function searchCatalog() {
+            const query = document.getElementById('catalog-search').value;
+            catalogOffset = 0;
+
+            try {
+                let url = `/api/neurolake/catalog/search?limit=20&offset=0`;
+                if (query) url += `&query=${encodeURIComponent(query)}`;
+                if (catalogFilter === 'high-quality') url += '&min_quality=0.8';
+
+                const response = await fetch(url);
+                const results = await response.json();
+
+                displayCatalogResults(results);
+            } catch (error) {
+                console.error('Error searching catalog:', error);
+            }
+        }
+
+        function displayCatalogResults(results) {
+            const container = document.getElementById('catalog-results');
+            container.innerHTML = '';
+
+            if (!results || results.length === 0) {
+                container.innerHTML = '<p class="text-muted">No datasets found</p>';
+                return;
+            }
+
+            results.forEach(dataset => {
+                const qualityClass = dataset.quality_score >= 0.8 ? 'quality-high' :
+                                   dataset.quality_score >= 0.5 ? 'quality-medium' : 'quality-low';
+
+                const item = document.createElement('div');
+                item.className = 'catalog-item';
+                item.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6>${dataset.dataset_name}</h6>
+                            <p class="text-muted mb-2">${dataset.description || 'No description'}</p>
+                            <div>
+                                ${(dataset.tags || []).map(tag => `<span class="badge bg-secondary">${tag}</span>`).join(' ')}
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="quality-score ${qualityClass}" style="width: 50px; height: 50px; font-size: 1rem;">
+                                ${(dataset.quality_score * 100).toFixed(0)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                item.onclick = () => viewDatasetDetails(dataset.dataset_id);
+                container.appendChild(item);
+            });
+        }
+
+        async function viewDatasetDetails(datasetId) {
+            // Load detailed view - could be a modal or navigate to detail page
+            console.log('View details for:', datasetId);
+            // TODO: Implement detailed view
+        }
+
+        function toggleFilter(chip, filter) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            catalogFilter = filter;
+            searchCatalog();
+        }
+
+        async function loadPopularDatasets() {
+            try {
+                const response = await fetch('/api/neurolake/catalog/popular?limit=5');
+                const data = await response.json();
+
+                const container = document.getElementById('popular-datasets');
+                container.innerHTML = data.datasets.map((d, i) => `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>${i+1}. ${d.dataset_name}</span>
+                        <span class="badge bg-primary">${d.access_count} views</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading popular datasets:', error);
+            }
+        }
+
+        async function loadQualityLeaders() {
+            try {
+                const response = await fetch('/api/neurolake/catalog/quality-leaders?limit=5');
+                const data = await response.json();
+
+                const container = document.getElementById('quality-leaders');
+                container.innerHTML = data.datasets.map((d, i) => `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>${i+1}. ${d.dataset_name}</span>
+                        <span class="badge bg-success">${(d.quality_score * 100).toFixed(0)}%</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading quality leaders:', error);
+            }
+        }
+
+        async function loadCatalogStats() {
+            try {
+                const response = await fetch('/api/neurolake/catalog/statistics');
+                const stats = await response.json();
+
+                const container = document.getElementById('catalog-stats-display');
+                container.innerHTML = `
+                    <div class="mb-2"><strong>Total Datasets:</strong> ${stats.total_datasets || 0}</div>
+                    <div class="mb-2"><strong>Total Columns:</strong> ${stats.total_columns || 0}</div>
+                    <div class="mb-2"><strong>Avg Quality:</strong> ${((stats.avg_quality || 0) * 100).toFixed(0)}%</div>
+                `;
+            } catch (error) {
+                console.error('Error loading catalog stats:', error);
+            }
+        }
+
+        // ============================================================================
+        // LINEAGE VISUALIZATION
+        // ============================================================================
+
+        async function loadLineage() {
+            const datasetId = document.getElementById('lineage-dataset').value;
+            const direction = document.getElementById('lineage-direction').value;
+            const maxDepth = document.getElementById('lineage-depth').value;
+
+            if (!datasetId) {
+                alert('Please select a dataset');
+                return;
+            }
+
+            try {
+                let url;
+                if (direction === 'downstream') {
+                    url = `/api/neurolake/lineage/downstream/${datasetId}?max_depth=${maxDepth}`;
+                } else if (direction === 'upstream') {
+                    url = `/api/neurolake/lineage/upstream/${datasetId}?max_depth=${maxDepth}`;
+                } else {
+                    // Load both and merge
+                    url = `/api/neurolake/lineage/downstream/${datasetId}?max_depth=${maxDepth}`;
+                }
+
+                const response = await fetch(url);
+                const lineageData = await response.json();
+
+                renderLineageGraph(lineageData);
+                loadImpactAnalysis(datasetId);
+                loadFreshnessAnalysis(datasetId);
+            } catch (error) {
+                console.error('Error loading lineage:', error);
+            }
+        }
+
+        function renderLineageGraph(data) {
+            // D3.js visualization
+            const container = document.getElementById('lineage-canvas');
+            container.innerHTML = ''; // Clear previous
+
+            const width = container.clientWidth;
+            const height = 600;
+
+            const svg = d3.select('#lineage-canvas')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // TODO: Implement D3 force-directed graph
+            // For now, show simple representation
+            if (data.nodes && data.nodes.length > 0) {
+                const text = svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height / 2)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#E3E3E3')
+                    .text(`Lineage graph with ${data.nodes.length} nodes and ${data.edges.length} edges`);
+            } else {
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height / 2)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#B8B8B8')
+                    .text('No lineage data available');
+            }
+        }
+
+        async function loadImpactAnalysis(datasetId) {
+            try {
+                const response = await fetch(`/api/neurolake/lineage/impact/${datasetId}`);
+                const impact = await response.json();
+
+                const container = document.getElementById('impact-analysis');
+                container.innerHTML = `
+                    <div class="mb-2"><strong>Affected Datasets:</strong> ${impact.affected_count}</div>
+                    <div class="mb-2"><strong>Risk Score:</strong> <span class="badge ${impact.risk_score > 0.7 ? 'bg-danger' : impact.risk_score > 0.4 ? 'bg-warning' : 'bg-success'}">${(impact.risk_score * 100).toFixed(0)}%</span></div>
+                    <div class="mb-2"><strong>Max Depth:</strong> ${impact.max_depth}</div>
+                    ${impact.recommendations.length > 0 ? '<div><strong>Recommendations:</strong><ul>' + impact.recommendations.map(r => `<li>${r}</li>`).join('') + '</ul></div>' : ''}
+                `;
+            } catch (error) {
+                console.error('Error loading impact analysis:', error);
+            }
+        }
+
+        async function loadFreshnessAnalysis(datasetId) {
+            try {
+                const response = await fetch(`/api/neurolake/lineage/freshness/${datasetId}`);
+                const freshness = await response.json();
+
+                const container = document.getElementById('freshness-analysis');
+                // Display freshness data
+                container.innerHTML = '<p class="text-muted">Freshness data loaded</p>';
+            } catch (error) {
+                console.error('Error loading freshness:', error);
+            }
+        }
+
+        // ============================================================================
+        // SCHEMA EVOLUTION
+        // ============================================================================
+
+        async function loadSchemaHistory() {
+            const datasetId = document.getElementById('schema-dataset').value;
+            if (!datasetId) return;
+
+            try {
+                const response = await fetch(`/api/neurolake/schema/history/${datasetId}`);
+                const data = await response.json();
+
+                const container = document.getElementById('schema-history');
+                if (data.versions && data.versions.length > 0) {
+                    container.innerHTML = `
+                        <table class="table table-dark table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Columns</th>
+                                    <th>Changed At</th>
+                                    <th>Changed By</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.versions.map(v => `
+                                    <tr>
+                                        <td>v${v.version_number}</td>
+                                        <td>${v.columns.length}</td>
+                                        <td>${new Date(v.changed_at).toLocaleString()}</td>
+                                        <td>${v.changed_by || 'System'}</td>
+                                        <td>${v.change_description || 'N/A'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+
+                    // Populate version dropdowns
+                    const options = data.versions.map(v => `<option value="${v.version_number}">Version ${v.version_number}</option>`).join('');
+                    document.getElementById('schema-version1').innerHTML = '<option value="">Select version</option>' + options;
+                    document.getElementById('schema-version2').innerHTML = '<option value="">Select version</option>' + options;
+                } else {
+                    container.innerHTML = '<p class="text-muted">No schema history available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading schema history:', error);
+            }
+        }
+
+        async function compareSchemaVersions() {
+            const datasetId = document.getElementById('schema-dataset').value;
+            const version1 = document.getElementById('schema-version1').value;
+            const version2 = document.getElementById('schema-version2').value;
+
+            if (!datasetId || !version1 || !version2) {
+                alert('Please select dataset and both versions');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/neurolake/schema/compare/${datasetId}?version1=${version1}&version2=${version2}`);
+                const data = await response.json();
+
+                const container = document.getElementById('schema-comparison');
+                if (data.changes && data.changes.length > 0) {
+                    container.innerHTML = `
+                        <h6>Changes: ${data.total_changes} (${data.breaking_changes} breaking)</h6>
+                        <table class="table table-dark table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Column</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.changes.map(c => `
+                                    <tr>
+                                        <td><span class="badge bg-info">${c.change_type}</span></td>
+                                        <td><span class="badge ${c.severity === 'breaking' ? 'bg-danger' : c.severity === 'warning' ? 'bg-warning' : 'bg-success'}">${c.severity}</span></td>
+                                        <td>${c.column_name || 'N/A'}</td>
+                                        <td>${c.description}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<p class="text-muted">No changes between versions</p>';
+                }
+            } catch (error) {
+                console.error('Error comparing schemas:', error);
+            }
+        }
+
+        // ============================================================================
+        // QUALITY METRICS
+        // ============================================================================
+
+        let qualityChart = null;
+
+        async function loadQualityMetrics() {
+            const datasetId = document.getElementById('quality-dataset').value;
+            if (!datasetId) return;
+
+            try {
+                // Load current quality
+                const currentResponse = await fetch(`/api/neurolake/quality/current/${datasetId}`);
+                const currentData = await currentResponse.json();
+
+                const scoreEl = document.getElementById('current-quality-score');
+                scoreEl.textContent = (currentData.quality_score * 100).toFixed(0);
+                scoreEl.className = 'quality-score mx-auto ' +
+                    (currentData.quality_score >= 0.8 ? 'quality-high' :
+                     currentData.quality_score >= 0.5 ? 'quality-medium' : 'quality-low');
+
+                // Load time series
+                const timeSeriesResponse = await fetch(`/api/neurolake/quality/time-series/${datasetId}?limit=30`);
+                const timeSeriesData = await timeSeriesResponse.json();
+
+                renderQualityChart(timeSeriesData.metrics);
+            } catch (error) {
+                console.error('Error loading quality metrics:', error);
+            }
+        }
+
+        function renderQualityChart(metrics) {
+            const ctx = document.getElementById('quality-chart').getContext('2d');
+
+            if (qualityChart) {
+                qualityChart.destroy();
+            }
+
+            qualityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: metrics.map(m => new Date(m.measured_at).toLocaleDateString()),
+                    datasets: [{
+                        label: 'Quality Score',
+                        data: metrics.map(m => m.quality_score * 100),
+                        borderColor: '#FF3621',
+                        backgroundColor: 'rgba(255, 54, 33, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                color: '#B8B8B8'
+                            },
+                            grid: {
+                                color: '#3A3A3A'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#B8B8B8'
+                            },
+                            grid: {
+                                color: '#3A3A3A'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================================================
+        // POPULATE DROPDOWNS
+        // ============================================================================
+
+        async function populateDatasetDropdowns() {
+            try {
+                const response = await fetch('/api/neurolake/catalog/search?limit=100');
+                const datasets = await response.json();
+
+                if (datasets && datasets.length > 0) {
+                    const options = datasets.map(d =>
+                        `<option value="${d.dataset_id}">${d.dataset_name}</option>`
+                    ).join('');
+
+                    document.getElementById('lineage-dataset').innerHTML = '<option value="">-- Choose a dataset --</option>' + options;
+                    document.getElementById('schema-dataset').innerHTML = '<option value="">-- Choose a dataset --</option>' + options;
+                    document.getElementById('quality-dataset').innerHTML = '<option value="">-- Choose a dataset --</option>' + options;
+                }
+            } catch (error) {
+                console.error('Error populating dropdowns:', error);
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadIngestionStats();
+            searchCatalog();
+            loadPopularDatasets();
+            loadQualityLeaders();
+            loadCatalogStats();
+            populateDatasetDropdowns();
+        });
+    </script>
+</body>
+</html>
