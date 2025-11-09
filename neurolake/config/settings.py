@@ -263,6 +263,8 @@ class APISettings(BaseSettings):
     port: int = Field(default=8000, description="API port", ge=1, le=65535)
     reload: bool = Field(default=False, description="Auto-reload on code changes")
     workers: int = Field(default=4, description="Worker processes", ge=1, le=32)
+    environment: str = Field(default="development", description="Environment: development, staging, production")
+    debug: bool = Field(default=True, description="Debug mode")
 
     # CORS
     cors_origins: List[str] = Field(
@@ -283,11 +285,16 @@ class APISettings(BaseSettings):
         ge=5,
         le=1440
     )
+    allowed_hosts: List[str] = Field(
+        default=["*"],
+        description="Allowed hosts for production"
+    )
 
     # Rate limiting
     rate_limit_enabled: bool = Field(default=True, description="Enable rate limiting")
     rate_limit_requests: int = Field(default=100, description="Requests per window", ge=1)
     rate_limit_window: int = Field(default=60, description="Window in seconds", ge=1)
+    rate_limit_per_minute: int = Field(default=60, description="Rate limit per minute", ge=1)
 
     # Documentation
     docs_url: str = Field(default="/docs", description="Swagger UI path")
@@ -310,10 +317,13 @@ class MonitoringSettings(BaseSettings):
 
     # Metrics
     enable_metrics: bool = Field(default=True, description="Enable Prometheus metrics")
+    metrics_enabled: bool = Field(default=True, description="Enable metrics collection")
+    prometheus_enabled: bool = Field(default=True, description="Enable Prometheus export")
     metrics_port: int = Field(default=9090, description="Metrics port", ge=1, le=65535)
 
     # Tracing
     enable_tracing: bool = Field(default=True, description="Enable OpenTelemetry tracing")
+    tracing_enabled: bool = Field(default=True, description="Enable distributed tracing")
     jaeger_host: str = Field(default="localhost", description="Jaeger host")
     jaeger_port: int = Field(default=6831, description="Jaeger port", ge=1, le=65535)
 

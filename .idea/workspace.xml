@@ -6,6 +6,31 @@
   <component name="ChangeListManager">
     <list default="true" id="1aad1ecc-77f7-496a-85c6-0a169ba3e3dc" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile.dashboard" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile.dashboard" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NCF_IMPLEMENTATION_COMPLETE.md" beforeDir="false" afterPath="$PROJECT_DIR$/NCF_IMPLEMENTATION_COMPLETE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UNIFIED_DASHBOARD_STATUS.md" beforeDir="false" afterPath="$PROJECT_DIR$/UNIFIED_DASHBOARD_STATUS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/advanced_databricks_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/benchmark_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/benchmark_results.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/auth/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/auth/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/config/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/config/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/dashboard/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/dashboard/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/nuic/catalog_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/nuic/catalog_engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neurolake/storage/manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/neurolake/storage/manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_complete_ndm_flow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_complete_platform_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_debug.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_fast_reader_large.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_fast_reader_quick.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_fast_reader_simple.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_ndm_complete_e2e.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_ndm_nuic_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_notebook_complete_system.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_nuic_hybrid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_real_catalog_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_rust_build.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_rust_roundtrip.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_rust_writer.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,6 +47,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;srinivas554&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/srinivas554/nuerolake.git&quot;,
+    &quot;accountId&quot;: &quot;65e3a343-006e-43ce-a8eb-df856f590f32&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -67,7 +104,7 @@
             <State>
               <option name="CUSTOM_BOOLEAN_PROPERTIES">
                 <map>
-                  <entry key="Show.Git.Branches" value="false" />
+                  <entry key="Show.Git.Branches" value="true" />
                 </map>
               </option>
             </State>

@@ -1,0 +1,28 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": "# Employee Data Analysis\nComplete ETL pipeline with employee, dept, salgrade, and location tables"
+    },
+    {
+      "cell_type": "code",
+      "source": "# Load employee data\nimport pandas as pd\nemployee_df = pd.read_json('test_data_e2e/employee.json')\nemployee_df.head()"
+    },
+    {
+      "cell_type": "code",
+      "source": "# Check for PII\nfrom neurolake.compliance import detect_pii\npii_columns = detect_pii(employee_df)\nprint(f'PII columns found: {pii_columns}')"
+    },
+    {
+      "cell_type": "code",
+      "source": "# Join with department\ndept_df = pd.read_json('test_data_e2e/dept.json')\nresult = employee_df.merge(dept_df, on='dept_id')\nresult.head()"
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}

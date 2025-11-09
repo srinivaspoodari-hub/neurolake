@@ -27,7 +27,17 @@ from neurolake.config.settings import (
     settings,
 )
 
+from neurolake.config.environment import (
+    EnvironmentManager,
+    Environment,
+    CloudProvider,
+    Permission,
+    EnvironmentConfig,
+    get_environment_manager,
+)
+
 __all__ = [
+    # Settings
     "Settings",
     "DatabaseSettings",
     "StorageSettings",
@@ -41,4 +51,11 @@ __all__ = [
     "get_settings",
     "reload_settings",
     "settings",
+    # Environment
+    "EnvironmentManager",
+    "Environment",
+    "CloudProvider",
+    "Permission",
+    "EnvironmentConfig",
+    "get_environment_manager",
 ]

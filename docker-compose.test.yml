@@ -1,0 +1,125 @@
+# Quick Test Docker Compose - Essential Services Only
+# For rapid E2E testing of NeuroLake Dashboard
+
+version: '3.8'
+
+services:
+  # NeuroLake Dashboard - Main Application
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    image: neurolake/dashboard:latest
+    container_name: neurolake-dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: neurolake
+      DB_USER: neurolake
+      DB_PASSWORD: dev_password
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # MinIO
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: neurolake
+      MINIO_SECRET_KEY: dev_password
+      # Environment
+      ENV: development
+      LOG_LEVEL: info
+    volumes:
+      # Mount test data
+      - ./test_data_e2e:/app/test_data_e2e
+      # Mount catalog data (if exists)
+      - ./catalog_data:/app/catalog_data
+      # Logs
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - neurolake-test
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL - Metadata Catalog
+  postgres:
+    image: postgres:16-alpine
+    container_name: neurolake-postgres
+    environment:
+      POSTGRES_DB: neurolake
+      POSTGRES_USER: neurolake
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neurolake"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neurolake-test
+    restart: unless-stopped
+
+  # Redis - Caching & Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: neurolake-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neurolake-test
+    restart: unless-stopped
+
+  # MinIO - Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: neurolake-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: neurolake
+      MINIO_ROOT_PASSWORD: dev_password
+    volumes:
+      - minio_test_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - neurolake-test
+    restart: unless-stopped
+
+volumes:
+  postgres_test_data:
+  redis_test_data:
+  minio_test_data:
+
+networks:
+  neurolake-test:
+    driver: bridge

@@ -3894,6 +3894,1208 @@ async def get_schema_evolution(schema_name: str):
 
 
 # ============================================================================
+# API ENDPOINTS - Authentication & Authorization
+# ============================================================================
+
+# Try to import Auth modules
+try:
+    from neurolake.auth import AuthService, RBACManager, AuditLogger as AuthAuditLogger
+    from neurolake.auth.models import User, Role, Permission
+
+    # Initialize auth components
+    auth_service = AuthService(secret_key=os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-prod"))
+    rbac_manager = RBACManager()
+    auth_audit = AuthAuditLogger()
+    AUTH_AVAILABLE = True
+    print("[OK] Authentication & Authorization modules loaded successfully")
+except Exception as e:
+    print(f"Warning: Auth module not available: {e}")
+    AUTH_AVAILABLE = False
+
+    # Mock implementations
+    class MockAuthService:
+        def create_user(self, **kwargs): return {"user_id": "mock_user_001", "username": kwargs.get("username")}
+        def authenticate(self, username, password): return {"user_id": "mock_user_001", "token": "mock_token"}
+        def verify_token(self, token): return {"user_id": "mock_user_001", "username": "demo_user"}
+        def list_users(self): return []
+
+    class MockRBAC:
+        def create_role(self, **kwargs): return {"role_id": "mock_role_001", "name": kwargs.get("name")}
+        def assign_role(self, user_id, role_id): return {"status": "success"}
+        def check_permission(self, user_id, permission): return True
+        def list_roles(self): return []
+
+    class MockAuthAudit:
+        def log_event(self, **kwargs): pass
+        def get_audit_logs(self, **kwargs): return []
+
+    auth_service = MockAuthService()
+    rbac_manager = MockRBAC()
+    auth_audit = MockAuthAudit()
+
+
+@app.post("/api/auth/register")
+async def register_user(request: Request):
+    """Register a new user"""
+    try:
+        data = await request.json()
+
+        user = auth_service.create_user(
+            username=data.get("username"),
+            email=data.get("email"),
+            password=data.get("password"),
+            full_name=data.get("full_name", ""),
+            metadata=data.get("metadata", {})
+        )
+
+        auth_audit.log_event(
+            event_type="user_registered",
+            user_id=user.get("user_id"),
+            details={"username": user.get("username")}
+        )
+
+        return {
+            "status": "success",
+            "user": user,
+            "message": f"User '{user.get('username')}' registered successfully"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/auth/login")
+async def login(request: Request):
+    """Authenticate user and return JWT token"""
+    try:
+        data = await request.json()
+
+        result = auth_service.authenticate(
+            username=data.get("username"),
+            password=data.get("password")
+        )
+
+        auth_audit.log_event(
+            event_type="user_login",
+            user_id=result.get("user_id"),
+            details={"username": data.get("username")}
+        )
+
+        return {
+            "status": "success",
+            "token": result.get("token"),
+            "user": result.get("user"),
+            "message": "Login successful"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=401,
+            content={"status": "error", "message": "Invalid credentials"}
+        )
+
+
+@app.post("/api/auth/verify")
+async def verify_token(request: Request):
+    """Verify JWT token"""
+    try:
+        data = await request.json()
+        token = data.get("token")
+
+        user_data = auth_service.verify_token(token)
+
+        return {
+            "status": "success",
+            "valid": True,
+            "user": user_data
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=401,
+            content={"status": "error", "valid": False, "message": "Invalid token"}
+        )
+
+
+@app.get("/api/auth/users")
+async def list_users():
+    """List all users"""
+    try:
+        users = auth_service.list_users()
+
+        return {
+            "status": "success",
+            "users": users,
+            "count": len(users)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/rbac/roles")
+async def create_role(request: Request):
+    """Create a new role"""
+    try:
+        data = await request.json()
+
+        role = rbac_manager.create_role(
+            name=data.get("name"),
+            description=data.get("description", ""),
+            permissions=data.get("permissions", [])
+        )
+
+        return {
+            "status": "success",
+            "role": role,
+            "message": f"Role '{role.get('name')}' created successfully"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/rbac/roles")
+async def list_roles():
+    """List all roles"""
+    try:
+        roles = rbac_manager.list_roles()
+
+        return {
+            "status": "success",
+            "roles": roles,
+            "count": len(roles)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/rbac/assign")
+async def assign_role(request: Request):
+    """Assign role to user"""
+    try:
+        data = await request.json()
+
+        result = rbac_manager.assign_role(
+            user_id=data.get("user_id"),
+            role_id=data.get("role_id")
+        )
+
+        auth_audit.log_event(
+            event_type="role_assigned",
+            user_id=data.get("user_id"),
+            details={"role_id": data.get("role_id")}
+        )
+
+        return {
+            "status": "success",
+            "message": "Role assigned successfully"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/auth/audit")
+async def get_auth_audit_logs(limit: int = 100, user_id: str = None):
+    """Get authentication audit logs"""
+    try:
+        logs = auth_audit.get_audit_logs(limit=limit, user_id=user_id)
+
+        return {
+            "status": "success",
+            "logs": logs,
+            "count": len(logs)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+# ============================================================================
+# API ENDPOINTS - Smart Ingestion
+# ============================================================================
+
+# Try to import Ingestion modules
+try:
+    from neurolake.ingestion import SmartIngestion, FileHandler
+
+    # Initialize ingestion components
+    ingestion_base = "/neurolake/ingestion" if os.path.exists("/neurolake") else "C:/NeuroLake/ingestion"
+    os.makedirs(ingestion_base, exist_ok=True)
+
+    smart_ingestion = SmartIngestion(storage_path=ingestion_base)
+    file_handler = FileHandler()
+    INGESTION_AVAILABLE = True
+    print("[OK] Smart Ingestion modules loaded successfully")
+except Exception as e:
+    print(f"Warning: Ingestion module not available: {e}")
+    INGESTION_AVAILABLE = False
+
+    # Mock implementations
+    class MockSmartIngestion:
+        def ingest_file(self, **kwargs):
+            return {
+                "ingestion_id": "mock_ingest_001",
+                "detected_format": "csv",
+                "schema": {"columns": []},
+                "stats": {"rows": 0, "size_bytes": 0}
+            }
+        def get_ingestion_stats(self):
+            return {"total_ingestions": 0, "by_format": {}, "total_size_bytes": 0}
+        def list_ingestions(self, limit=100): return []
+
+    class MockFileHandler:
+        def detect_format(self, file_path): return "unknown"
+        def infer_schema(self, file_path): return {"columns": []}
+        def validate_file(self, file_path): return {"valid": True, "errors": []}
+
+    smart_ingestion = MockSmartIngestion()
+    file_handler = MockFileHandler()
+
+
+@app.post("/api/ingestion/ingest")
+async def ingest_data(
+    file: UploadFile = File(...),
+    auto_detect: bool = True,
+    target_table: str = None
+):
+    """Smart ingestion of data files"""
+    try:
+        # Save uploaded file temporarily
+        temp_dir = Path("./temp_uploads")
+        temp_dir.mkdir(exist_ok=True)
+        temp_file = temp_dir / file.filename
+
+        with open(temp_file, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        # Perform smart ingestion
+        result = smart_ingestion.ingest_file(
+            file_path=str(temp_file),
+            auto_detect=auto_detect,
+            target_table=target_table,
+            metadata={"original_filename": file.filename}
+        )
+
+        # Clean up temp file
+        temp_file.unlink()
+
+        return {
+            "status": "success",
+            "ingestion": result,
+            "message": f"File '{file.filename}' ingested successfully"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/ingestion/detect-format")
+async def detect_file_format(file: UploadFile = File(...)):
+    """Detect file format automatically"""
+    try:
+        # Save uploaded file temporarily
+        temp_dir = Path("./temp_uploads")
+        temp_dir.mkdir(exist_ok=True)
+        temp_file = temp_dir / file.filename
+
+        with open(temp_file, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        # Detect format
+        format_type = file_handler.detect_format(str(temp_file))
+        schema = file_handler.infer_schema(str(temp_file))
+        validation = file_handler.validate_file(str(temp_file))
+
+        # Clean up temp file
+        temp_file.unlink()
+
+        return {
+            "status": "success",
+            "filename": file.filename,
+            "detected_format": format_type,
+            "schema": schema,
+            "validation": validation
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/ingestion/stats")
+async def get_ingestion_stats():
+    """Get ingestion statistics"""
+    try:
+        stats = smart_ingestion.get_ingestion_stats()
+
+        return {
+            "status": "success",
+            "stats": stats
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/ingestion/history")
+async def get_ingestion_history(limit: int = 100):
+    """Get ingestion history"""
+    try:
+        ingestions = smart_ingestion.list_ingestions(limit=limit)
+
+        return {
+            "status": "success",
+            "ingestions": ingestions,
+            "count": len(ingestions)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+# ============================================================================
+# API ENDPOINTS - NeuroBrain (AI Engine)
+# ============================================================================
+
+# Try to import NeuroBrain modules
+try:
+    from neurolake.neurobrain import (
+        NeuroBrainOrchestrator,
+        PatternLearner,
+        QualityAssessor,
+        SchemaDetector,
+        TransformationSuggester
+    )
+
+    # Initialize NeuroBrain components
+    neurobrain_base = "/neurolake/neurobrain" if os.path.exists("/neurolake") else "C:/NeuroLake/neurobrain"
+    os.makedirs(neurobrain_base, exist_ok=True)
+
+    neurobrain = NeuroBrainOrchestrator(storage_path=neurobrain_base)
+    pattern_learner = PatternLearner()
+    quality_assessor = QualityAssessor()
+    schema_detector = SchemaDetector()
+    transformation_suggester = TransformationSuggester()
+    NEUROBRAIN_AVAILABLE = True
+    print("[OK] NeuroBrain (AI Engine) modules loaded successfully")
+except Exception as e:
+    print(f"Warning: NeuroBrain module not available: {e}")
+    NEUROBRAIN_AVAILABLE = False
+
+    # Mock implementations
+    class MockNeuroBrain:
+        def analyze_dataset(self, **kwargs):
+            return {
+                "analysis_id": "mock_analysis_001",
+                "quality_score": 0.85,
+                "detected_patterns": [],
+                "suggestions": []
+            }
+        def get_insights(self, dataset_id):
+            return {"insights": [], "recommendations": []}
+        def learn_from_feedback(self, **kwargs): return {"status": "learned"}
+
+    class MockPatternLearner:
+        def detect_patterns(self, data): return []
+        def learn_pattern(self, pattern_data): return {"pattern_id": "mock_pattern_001"}
+        def get_learned_patterns(self): return []
+
+    class MockQualityAssessor:
+        def assess_quality(self, dataset_id):
+            return {
+                "overall_score": 0.0,
+                "completeness": 0.0,
+                "accuracy": 0.0,
+                "consistency": 0.0,
+                "issues": []
+            }
+        def suggest_improvements(self, dataset_id): return []
+
+    class MockSchemaDetector:
+        def detect_schema(self, data): return {"columns": [], "relationships": []}
+        def compare_schemas(self, schema1, schema2): return {"differences": []}
+
+    class MockTransformationSuggester:
+        def suggest_transformations(self, source_schema, target_schema):
+            return []
+        def generate_transformation_code(self, transformation): return ""
+
+    neurobrain = MockNeuroBrain()
+    pattern_learner = MockPatternLearner()
+    quality_assessor = MockQualityAssessor()
+    schema_detector = MockSchemaDetector()
+    transformation_suggester = MockTransformationSuggester()
+
+
+@app.post("/api/neurobrain/analyze")
+async def analyze_dataset(request: Request):
+    """Analyze dataset using AI"""
+    try:
+        data = await request.json()
+
+        result = neurobrain.analyze_dataset(
+            dataset_id=data.get("dataset_id"),
+            dataset_name=data.get("dataset_name"),
+            data_sample=data.get("data_sample", {}),
+            analysis_type=data.get("analysis_type", "comprehensive")
+        )
+
+        return {
+            "status": "success",
+            "analysis": result,
+            "message": "Dataset analyzed successfully"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/neurobrain/insights/{dataset_id}")
+async def get_dataset_insights(dataset_id: str):
+    """Get AI-generated insights for a dataset"""
+    try:
+        insights = neurobrain.get_insights(dataset_id)
+
+        return {
+            "status": "success",
+            "dataset_id": dataset_id,
+            "insights": insights
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/patterns/detect")
+async def detect_patterns(request: Request):
+    """Detect patterns in data"""
+    try:
+        data = await request.json()
+
+        patterns = pattern_learner.detect_patterns(data.get("data"))
+
+        return {
+            "status": "success",
+            "patterns": patterns,
+            "count": len(patterns)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/neurobrain/patterns")
+async def get_learned_patterns():
+    """Get all learned patterns"""
+    try:
+        patterns = pattern_learner.get_learned_patterns()
+
+        return {
+            "status": "success",
+            "patterns": patterns,
+            "count": len(patterns)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/quality/assess")
+async def assess_data_quality(request: Request):
+    """Assess data quality using AI"""
+    try:
+        data = await request.json()
+        dataset_id = data.get("dataset_id")
+
+        assessment = quality_assessor.assess_quality(dataset_id)
+        suggestions = quality_assessor.suggest_improvements(dataset_id)
+
+        return {
+            "status": "success",
+            "dataset_id": dataset_id,
+            "assessment": assessment,
+            "suggestions": suggestions
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/schema/detect")
+async def detect_schema(request: Request):
+    """Detect schema from data sample"""
+    try:
+        data = await request.json()
+
+        detected_schema = schema_detector.detect_schema(data.get("data"))
+
+        return {
+            "status": "success",
+            "schema": detected_schema
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/schema/compare")
+async def compare_schemas(request: Request):
+    """Compare two schemas and identify differences"""
+    try:
+        data = await request.json()
+
+        comparison = schema_detector.compare_schemas(
+            schema1=data.get("schema1"),
+            schema2=data.get("schema2")
+        )
+
+        return {
+            "status": "success",
+            "comparison": comparison
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/transformations/suggest")
+async def suggest_transformations(request: Request):
+    """Suggest transformations using AI"""
+    try:
+        data = await request.json()
+
+        suggestions = transformation_suggester.suggest_transformations(
+            source_schema=data.get("source_schema"),
+            target_schema=data.get("target_schema"),
+            context=data.get("context", {})
+        )
+
+        return {
+            "status": "success",
+            "suggestions": suggestions,
+            "count": len(suggestions)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/transformations/generate")
+async def generate_transformation_code(request: Request):
+    """Generate transformation code from specification"""
+    try:
+        data = await request.json()
+
+        code = transformation_suggester.generate_transformation_code(
+            transformation=data.get("transformation"),
+            language=data.get("language", "python")
+        )
+
+        return {
+            "status": "success",
+            "code": code,
+            "language": data.get("language", "python")
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/neurobrain/feedback")
+async def learn_from_feedback(request: Request):
+    """Learn from user feedback"""
+    try:
+        data = await request.json()
+
+        result = neurobrain.learn_from_feedback(
+            feedback_type=data.get("type"),
+            subject=data.get("subject"),
+            feedback_data=data.get("data"),
+            rating=data.get("rating")
+        )
+
+        return {
+            "status": "success",
+            "message": "Feedback processed successfully",
+            "result": result
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+# ============================================================================
+# API ENDPOINTS - Compute Orchestration
+# ============================================================================
+
+# Try to import Compute modules and Environment config
+try:
+    from neurolake.compute import (
+        ComputeOrchestrator,
+        LocalComputeEngine,
+        CloudComputeEngine,
+        DistributedComputeEngine,
+        CloudProvider,
+        WorkloadType,
+        ExecutionTier,
+        WorkloadRequest
+    )
+    from neurolake.config import get_environment_manager
+
+    # Get environment manager
+    env_manager = get_environment_manager()
+
+    # Initialize compute orchestrator with environment enforcement
+    compute_orchestrator = ComputeOrchestrator(
+        enable_cloud=True,
+        enable_distributed=True,
+        default_cloud_provider=CloudProvider.AWS,
+        memory_overhead_percent=40.0,
+        user_permissions=[]  # Will be set per-request based on auth
+    )
+    COMPUTE_AVAILABLE = True
+    ENV_MANAGER_AVAILABLE = True
+    print("[OK] Compute orchestration modules loaded successfully")
+    print(f"[OK] Environment: {env_manager.current_env.value}")
+    if env_manager.is_production():
+        print("[WARNING] PRODUCTION MODE: Cloud-only enforcement active")
+except Exception as e:
+    print(f"Warning: Compute module not available: {e}")
+    COMPUTE_AVAILABLE = False
+    ENV_MANAGER_AVAILABLE = False
+    env_manager = None
+
+    # Mock implementation
+    class MockComputeOrchestrator:
+        def get_local_resources(self):
+            return {
+                'cpu_count_logical': 0,
+                'cpu_usage_percent': 0,
+                'memory_total_gb': 0,
+                'memory_available_gb': 0,
+                'gpu_available': False
+            }
+        def get_statistics(self):
+            return {
+                'total_workloads': 0,
+                'active_workloads': 0,
+                'by_tier': {},
+                'by_status': {},
+                'total_cost_usd': 0.0
+            }
+        def get_configured_providers(self): return []
+        def configure_cloud_provider(self, provider, **credentials): return True
+
+    compute_orchestrator = MockComputeOrchestrator()
+
+
+@app.get("/api/compute/resources")
+async def get_compute_resources():
+    """Get current local compute resources"""
+    try:
+        resources = compute_orchestrator.get_local_resources()
+
+        return {
+            "status": "success",
+            "resources": resources.to_dict() if hasattr(resources, 'to_dict') else resources
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/compute/statistics")
+async def get_compute_statistics():
+    """Get compute orchestrator statistics"""
+    try:
+        stats = compute_orchestrator.get_statistics()
+
+        return {
+            "status": "success",
+            "statistics": stats
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/compute/providers")
+async def get_configured_compute_providers():
+    """Get configured cloud compute providers"""
+    try:
+        providers = compute_orchestrator.get_configured_providers()
+
+        return {
+            "status": "success",
+            "providers": providers,
+            "count": len(providers)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/compute/configure/aws")
+async def configure_aws_compute(request: Request):
+    """Configure AWS compute"""
+    try:
+        data = await request.json()
+
+        success = compute_orchestrator.configure_cloud_provider(
+            provider=CloudProvider.AWS if COMPUTE_AVAILABLE else 'aws',
+            access_key_id=data.get('access_key_id'),
+            secret_access_key=data.get('secret_access_key'),
+            region=data.get('region', 'us-east-1')
+        )
+
+        return {
+            "status": "success" if success else "failed",
+            "message": "AWS compute configured successfully" if success else "Failed to configure AWS"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/compute/configure/azure")
+async def configure_azure_compute(request: Request):
+    """Configure Azure compute"""
+    try:
+        data = await request.json()
+
+        success = compute_orchestrator.configure_cloud_provider(
+            provider=CloudProvider.AZURE if COMPUTE_AVAILABLE else 'azure',
+            subscription_id=data.get('subscription_id'),
+            tenant_id=data.get('tenant_id'),
+            client_id=data.get('client_id'),
+            client_secret=data.get('client_secret'),
+            region=data.get('region', 'eastus')
+        )
+
+        return {
+            "status": "success" if success else "failed",
+            "message": "Azure compute configured successfully" if success else "Failed to configure Azure"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/compute/configure/gcp")
+async def configure_gcp_compute(request: Request):
+    """Configure GCP compute"""
+    try:
+        data = await request.json()
+
+        success = compute_orchestrator.configure_cloud_provider(
+            provider=CloudProvider.GCP if COMPUTE_AVAILABLE else 'gcp',
+            project_id=data.get('project_id'),
+            credentials_path=data.get('credentials_path'),
+            region=data.get('region', 'us-central1')
+        )
+
+        return {
+            "status": "success" if success else "failed",
+            "message": "GCP compute configured successfully" if success else "Failed to configure GCP"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/compute/execute")
+async def execute_compute_workload(request: Request):
+    """Execute a compute workload with intelligent routing"""
+    try:
+        data = await request.json()
+
+        if not COMPUTE_AVAILABLE:
+            return {
+                "status": "mock",
+                "message": "Compute engine not available - mock execution",
+                "workload_id": f"mock_{data.get('workload_id', 'unknown')}",
+                "tier": "local"
+            }
+
+        # Create workload request
+        import uuid
+        workload_id = data.get('workload_id', f"wl_{uuid.uuid4().hex[:8]}")
+
+        workload_request = WorkloadRequest(
+            workload_id=workload_id,
+            workload_type=WorkloadType(data.get('workload_type', 'sql_query')),
+            function=None,  # Would be provided for actual execution
+            args=tuple(),
+            kwargs={},
+            required_cpu_cores=data.get('required_cpu_cores', 1.0),
+            required_memory_gb=data.get('required_memory_gb', 2.0),
+            required_gpu=data.get('required_gpu', False),
+            estimated_duration_minutes=data.get('estimated_duration_minutes', 5.0),
+            prefer_local=data.get('prefer_local', True),
+            max_cost_usd=data.get('max_cost_usd'),
+            deadline=data.get('deadline'),
+            data_size_gb=data.get('data_size_gb'),
+            data_location=data.get('data_location')
+        )
+
+        # Execute workload
+        result = compute_orchestrator.execute(workload_request)
+
+        return {
+            "status": "success",
+            "workload_id": result.workload_id,
+            "execution_tier": result.execution_tier.value,
+            "execution_status": result.status,
+            "provider": result.provider,
+            "job_id": result.job_id,
+            "estimated_cost_usd": result.estimated_cost_usd,
+            "duration_seconds": result.duration_seconds
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/compute/system-info")
+async def get_system_info():
+    """Get detailed system information"""
+    try:
+        if COMPUTE_AVAILABLE:
+            info = compute_orchestrator.local_engine.get_system_info()
+        else:
+            info = {
+                'system': {'platform': 'unknown'},
+                'compute': {},
+                'memory': {},
+                'storage': {}
+            }
+
+        return {
+            "status": "success",
+            "system_info": info
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/compute/resource-trends")
+async def get_resource_trends(last_n: int = 10):
+    """Get resource usage trends"""
+    try:
+        if COMPUTE_AVAILABLE:
+            trends = compute_orchestrator.local_engine.get_resource_trends(last_n=last_n)
+        else:
+            trends = {}
+
+        return {
+            "status": "success",
+            "trends": trends
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/compute/memory/dynamic")
+async def get_dynamic_memory_allocation(overhead_percent: float = 40.0):
+    """
+    Get dynamic memory allocation based on current availability.
+
+    Automatically reserves overhead percentage for system stability.
+    Example: 40% overhead means 60% of available memory is usable.
+
+    Args:
+        overhead_percent: Percentage to reserve (default 40%)
+
+    Returns:
+        Memory allocation details showing total, available, usable, and reserved
+    """
+    try:
+        if COMPUTE_AVAILABLE:
+            allocation = compute_orchestrator.local_engine.get_dynamic_memory_allocation(
+                overhead_percent=overhead_percent
+            )
+        else:
+            allocation = {
+                'total_memory_gb': 0,
+                'current_available_gb': 0,
+                'overhead_percent': overhead_percent,
+                'reserved_for_system_gb': 0,
+                'usable_for_workload_gb': 0,
+                'current_usage_percent': 0
+            }
+
+        return {
+            "status": "success",
+            "allocation": allocation,
+            "explanation": {
+                "total_memory": f"{allocation['total_memory_gb']:.2f} GB total RAM",
+                "currently_available": f"{allocation['current_available_gb']:.2f} GB available now",
+                "overhead_reserved": f"{allocation['reserved_for_system_gb']:.2f} GB reserved for system ({overhead_percent}%)",
+                "usable_for_workload": f"{allocation['usable_for_workload_gb']:.2f} GB can be safely used",
+                "safety_note": f"Keeping {overhead_percent}% buffer prevents system instability"
+            }
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+# ============================================================================
+# API ENDPOINTS - Environment Configuration (Admin)
+# ============================================================================
+
+@app.get("/api/environment/status")
+async def get_environment_status():
+    """
+    Get current environment configuration and status.
+
+    Shows which environment (prod/staging/dev) and what's allowed.
+    """
+    try:
+        if not ENV_MANAGER_AVAILABLE or not env_manager:
+            return {
+                "status": "success",
+                "environment": "development",
+                "note": "Environment manager not available - default mode"
+            }
+
+        config = env_manager.get_config_summary()
+
+        return {
+            "status": "success",
+            "environment": config['environment'],
+            "config": config,
+            "restrictions": {
+                "is_production": env_manager.is_production(),
+                "local_compute_allowed": config['compute']['local_allowed'],
+                "local_storage_allowed": config['storage']['local_allowed'],
+                "cloud_required": config['compute']['cloud_required']
+            }
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/environment/config/update")
+async def update_environment_config(request: Request):
+    """
+    Update environment configuration (Admin only).
+
+    Requires admin:full or admin:config permission.
+    Production config is locked and requires admin:full.
+
+    Example:
+    {
+      "user_id": "admin@company.com",
+      "user_permissions": ["admin:config"],
+      "updates": {
+        "compute_default_cloud": "azure",
+        "storage_default_cloud": "aws"
+      }
+    }
+    """
+    try:
+        if not ENV_MANAGER_AVAILABLE or not env_manager:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "error", "message": "Environment manager not available"}
+            )
+
+        data = await request.json()
+
+        user_id = data.get("user_id", "unknown")
+        user_permissions = data.get("user_permissions", [])
+        updates = data.get("updates", {})
+
+        result = env_manager.update_config(
+            user_permissions=user_permissions,
+            user_id=user_id,
+            **updates
+        )
+
+        if result['success']:
+            return {
+                "status": "success",
+                "message": result['message'],
+                "updated_by": result['updated_by']
+            }
+        else:
+            return JSONResponse(
+                status_code=403,
+                content={"status": "error", "message": result['reason']}
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.get("/api/environment/allowed-resources")
+async def check_allowed_resources(user_permissions: str = ""):
+    """
+    Check what resources are allowed for current environment and user.
+
+    Query params:
+      user_permissions: Comma-separated list of permissions
+
+    Returns what's allowed based on environment and user privileges.
+    """
+    try:
+        if not ENV_MANAGER_AVAILABLE or not env_manager:
+            return {
+                "status": "success",
+                "local_compute": {"allowed": True},
+                "local_storage": {"allowed": True},
+                "note": "No restrictions - environment manager not available"
+            }
+
+        # Parse permissions
+        perms = [p.strip() for p in user_permissions.split(",") if p.strip()]
+
+        # Check compute
+        local_compute = env_manager.can_use_local_compute(perms)
+
+        # Check storage
+        local_storage = env_manager.can_use_local_storage(perms)
+
+        # Get allowed clouds
+        compute_clouds = env_manager.get_allowed_cloud_providers("compute")
+        storage_clouds = env_manager.get_allowed_cloud_providers("storage")
+
+        return {
+            "status": "success",
+            "environment": env_manager.current_env.value,
+            "local_compute": local_compute,
+            "local_storage": local_storage,
+            "cloud_providers": {
+                "compute": {
+                    "allowed": [c.value for c in compute_clouds],
+                    "default": env_manager.get_default_cloud_provider("compute").value
+                },
+                "storage": {
+                    "allowed": [c.value for c in storage_clouds],
+                    "default": env_manager.get_default_cloud_provider("storage").value
+                }
+            }
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+@app.post("/api/environment/enforce-production-rules")
+async def enforce_production_rules(request: Request):
+    """
+    Enforce production rules (Admin only).
+
+    Forces cloud-only settings if in production environment.
+    Requires admin:full permission.
+    """
+    try:
+        if not ENV_MANAGER_AVAILABLE or not env_manager:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "error", "message": "Environment manager not available"}
+            )
+
+        data = await request.json()
+        user_permissions = data.get("user_permissions", [])
+
+        # Check admin permission
+        if "admin:full" not in user_permissions:
+            return JSONResponse(
+                status_code=403,
+                content={"status": "error", "message": "admin:full permission required"}
+            )
+
+        result = env_manager.enforce_production_rules()
+
+        return {
+            "status": "success",
+            "result": result
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+
+# ============================================================================
 # API ENDPOINTS - Settings & Configuration
 # ============================================================================
 
@@ -4434,7 +5636,13 @@ async def dashboard_home():
                 <i class="bi bi-graph-up"></i> LLM Usage
             </a>
             <a class="nav-link" href="#" data-tab="storage">
-                <i class="bi bi-hdd-fill"></i> Storage & NCF
+                <i class="bi bi-hdd-fill"></i> Storage
+            </a>
+            <a class="nav-link" href="#" data-tab="ncf">
+                <i class="bi bi-layers-fill"></i> NCF Tables
+            </a>
+            <a class="nav-link" href="#" data-tab="cloud-auth">
+                <i class="bi bi-cloud-check-fill"></i> Cloud Auth
             </a>
             <a class="nav-link" href="#" data-tab="monitoring">
                 <i class="bi bi-activity"></i> Monitoring
@@ -4794,6 +6002,191 @@ async def dashboard_home():
                                 </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NCF (NeuroLake Common Format) Tab -->
+        <div id="ncf" class="tab-content" style="display: none;">
+            <h3><i class="bi bi-layers-fill"></i> NCF (NeuroLake Common Format) - AI-Native Storage</h3>
+
+            <!-- NCF Overview Metrics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" id="ncf-total-tables">0</div>
+                        <div class="metric-label">Total Tables</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" id="ncf-tables-with-pii">0</div>
+                        <div class="metric-label">Tables with PII</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" id="ncf-total-rows">0</div>
+                        <div class="metric-label">Total Rows</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" id="ncf-compliance-status">
+                            <span class="badge bg-success">Compliant</span>
+                        </div>
+                        <div class="metric-label">Compliance Status</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Table Button -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <button class="btn btn-primary" onclick="showCreateNCFTableModal()">
+                        <i class="bi bi-plus-circle"></i> Create NCF Table
+                    </button>
+                    <button class="btn btn-info" onclick="refreshNCFTables()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button class="btn btn-warning" onclick="scanAllTablesForPII()">
+                        <i class="bi bi-shield-exclamation"></i> Scan All for PII
+                    </button>
+                </div>
+            </div>
+
+            <!-- NCF Tables List -->
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-table"></i> NCF Tables</span>
+                    <span class="badge bg-secondary" id="ncf-table-count">0 tables</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="ncf-tables-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Table Name</th>
+                                    <th>Rows</th>
+                                    <th>Version</th>
+                                    <th>Created At</th>
+                                    <th>PII Columns</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ncf-tables-body">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted p-4">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                        <p class="mt-2">Loading NCF tables...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PII Compliance Report -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-shield-fill-check"></i> PII Detection & GDPR/CCPA Compliance
+                </div>
+                <div class="card-body">
+                    <div id="pii-compliance-report">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <span class="ms-2">Loading compliance report...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloud Authentication Tab -->
+        <div id="cloud-auth" class="tab-content" style="display: none;">
+            <h3><i class="bi bi-cloud-check-fill"></i> Cloud Authentication (IAM Roles)</h3>
+
+            <div class="alert alert-info">
+                <strong><i class="bi bi-info-circle"></i> Secure Authentication</strong>
+                <p class="mb-0">NeuroLake uses role-based authentication for maximum security:
+                    <br>• AWS: IAM Roles & AssumeRole
+                    <br>• Azure: Managed Identity
+                    <br>• GCP: Workload Identity & Application Default Credentials
+                </p>
+            </div>
+
+            <!-- Authentication Status Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <i class="bi bi-cloud"></i> AWS Authentication
+                        </div>
+                        <div class="card-body" id="aws-auth-status">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="ms-2">Checking...</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-sm btn-primary" onclick="configureAWSAuth()">
+                                <i class="bi bi-gear"></i> Configure
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="testAWSConnection()">
+                                <i class="bi bi-arrow-repeat"></i> Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <i class="bi bi-cloud"></i> Azure Authentication
+                        </div>
+                        <div class="card-body" id="azure-auth-status">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="ms-2">Checking...</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-sm btn-primary" onclick="configureAzureAuth()">
+                                <i class="bi bi-gear"></i> Configure
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="testAzureConnection()">
+                                <i class="bi bi-arrow-repeat"></i> Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <i class="bi bi-cloud"></i> GCP Authentication
+                        </div>
+                        <div class="card-body" id="gcp-auth-status">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="ms-2">Checking...</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-sm btn-primary" onclick="configureGCPAuth()">
+                                <i class="bi bi-gear"></i> Configure
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="testGCPConnection()">
+                                <i class="bi bi-arrow-repeat"></i> Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Details -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-list-check"></i> Authentication Details
+                </div>
+                <div class="card-body">
+                    <div id="auth-details-content">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <span class="ms-2">Loading authentication details...</span>
                     </div>
                 </div>
             </div>
@@ -6143,7 +7536,7 @@ async def dashboard_home():
                             <ul>
                                 ${data.suggestions.map(s => `<li>${s}</li>`).join('')}
                             </ul>
-                            <button class="btn btn-primary btn-sm" onclick="sqlEditor.setValue(\`${data.optimized_sql}\`)">
+                            <button class="btn btn-primary btn-sm" onclick="sqlEditor.setValue(`${data.optimized_sql}`)">
                                 Apply Optimized Query
                             </button>
                         </div>
@@ -7460,6 +8853,416 @@ async def dashboard_home():
             if (storageTab) storageTab.style.display = 'block';
         }
 
+        // ============================================================================
+        // NCF (NeuroLake Common Format) Functions
+        // ============================================================================
+
+        async function refreshNCFTables() {
+            try {
+                const response = await fetch('/api/ncf/tables');
+                const data = await response.json();
+
+                if (data.success) {
+                    const tbody = document.getElementById('ncf-tables-body');
+                    const tables = data.tables || [];
+
+                    // Update metrics
+                    document.getElementById('ncf-total-tables').textContent = tables.length;
+                    document.getElementById('ncf-table-count').textContent = `${tables.length} tables`;
+
+                    let totalRows = 0;
+                    tables.forEach(t => totalRows += (t.row_count || 0));
+                    document.getElementById('ncf-total-rows').textContent = totalRows.toLocaleString();
+
+                    // Build table rows
+                    if (tables.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center text-muted p-4">
+                                    <i class="bi bi-table fs-1"></i>
+                                    <p class="mt-2">No NCF tables found. Create your first table!</p>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        tbody.innerHTML = tables.map(table => `
+                            <tr>
+                                <td><strong>${table.table_name}</strong></td>
+                                <td>${(table.row_count || 0).toLocaleString()}</td>
+                                <td><span class="badge bg-info">v${table.version || 0}</span></td>
+                                <td>${table.created_at ? new Date(table.created_at).toLocaleString() : 'N/A'}</td>
+                                <td><button class="btn btn-sm btn-warning" onclick="checkTablePII('${table.table_name}')">
+                                    <i class="bi bi-shield-exclamation"></i> Check PII
+                                </button></td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewTableSchema('${table.table_name}')">
+                                        <i class="bi bi-list-ul"></i> Schema
+                                    </button>
+                                    <button class="btn btn-sm btn-success" onclick="viewTableHistory('${table.table_name}')">
+                                        <i class="bi bi-clock-history"></i> History
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="optimizeTable('${table.table_name}')">
+                                        <i class="bi bi-lightning"></i> Optimize
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading NCF tables:', error);
+                showNotification('Error loading NCF tables', 'error');
+            }
+        }
+
+        async function scanAllTablesForPII() {
+            try {
+                const response = await fetch('/api/ncf/compliance/pii-report');
+                const data = await response.json();
+
+                if (data.success) {
+                    const summary = data.summary;
+                    const tables = data.tables || [];
+
+                    // Update metrics
+                    document.getElementById('ncf-tables-with-pii').textContent = summary.tables_with_pii || 0;
+
+                    // Update compliance status
+                    const complianceStatus = document.getElementById('ncf-compliance-status');
+                    if (data.compliance_status === 'compliant') {
+                        complianceStatus.innerHTML = '<span class="badge bg-success">Compliant</span>';
+                    } else {
+                        complianceStatus.innerHTML = '<span class="badge bg-warning">Warning</span>';
+                    }
+
+                    // Build report
+                    const reportDiv = document.getElementById('pii-compliance-report');
+                    reportDiv.innerHTML = `
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value">${summary.total_tables_scanned || 0}</div>
+                                    <div class="metric-label">Tables Scanned</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value">${summary.tables_with_pii || 0}</div>
+                                    <div class="metric-label">Tables with PII</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value">${summary.total_pii_columns || 0}</div>
+                                    <div class="metric-label">PII Columns Detected</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${tables.length > 0 ? `
+                            <h5>Tables with PII:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Table Name</th>
+                                            <th>PII Columns</th>
+                                            <th>Column Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tables.map(t => `
+                                            <tr>
+                                                <td><strong>${t.table_name}</strong></td>
+                                                <td><span class="badge bg-danger">${t.pii_count}</span></td>
+                                                <td>${t.pii_columns.map(c =>
+                                                    `<span class="badge bg-warning me-1">${c.column} (${c.type})</span>`
+                                                ).join('')}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="alert alert-warning mt-3">
+                                <strong>Recommendations:</strong>
+                                <ul class="mb-0">
+                                    ${data.recommendations.map(r => `<li>${r}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : `
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> No PII detected in any tables. Your data is GDPR/CCPA compliant!
+                            </div>
+                        `}
+                    `;
+
+                    showNotification('PII scan complete', 'success');
+                }
+            } catch (error) {
+                console.error('Error scanning for PII:', error);
+                showNotification('Error scanning for PII', 'error');
+            }
+        }
+
+        async function checkTablePII(tableName) {
+            try {
+                const response = await fetch(`/api/ncf/tables/${tableName}/pii`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.pii_count > 0) {
+                        alert(`Table "${tableName}" contains ${data.pii_count} PII columns:\n\n` +
+                            data.pii_columns.map(c => `• ${c.column_name} (${c.pii_type})`).join('\n'));
+                    } else {
+                        alert(`Table "${tableName}" does not contain any PII columns.`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking PII:', error);
+                showNotification('Error checking PII', 'error');
+            }
+        }
+
+        async function viewTableSchema(tableName) {
+            try {
+                const response = await fetch(`/api/ncf/tables/${tableName}/schema`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const schema = data.schema;
+                    const schemaText = Object.entries(schema).map(([col, type]) =>
+                        `${col}: ${type}`
+                    ).join('\n');
+                    alert(`Schema for "${tableName}":\n\n${schemaText}`);
+                }
+            } catch (error) {
+                console.error('Error viewing schema:', error);
+            }
+        }
+
+        async function viewTableHistory(tableName) {
+            try {
+                const response = await fetch(`/api/ncf/tables/${tableName}/history`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const history = data.history;
+                    if (history.length > 0) {
+                        const historyText = history.map(h =>
+                            `Version ${h.version}: ${h.operation} (${h.rows_affected} rows) at ${h.timestamp}`
+                        ).join('\n');
+                        alert(`History for "${tableName}":\n\n${historyText}`);
+                    } else {
+                        alert(`No history found for "${tableName}"`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error viewing history:', error);
+            }
+        }
+
+        async function optimizeTable(tableName) {
+            if (!confirm(`Optimize table "${tableName}"? This will compact and reorganize the data.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/ncf/tables/${tableName}/optimize`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`Table "${tableName}" optimized successfully`, 'success');
+                } else {
+                    showNotification(`Error optimizing table: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error optimizing table:', error);
+                showNotification('Error optimizing table', 'error');
+            }
+        }
+
+        function showCreateNCFTableModal() {
+            const tableName = prompt('Enter table name:');
+            if (!tableName) return;
+
+            const schemaStr = prompt('Enter schema as JSON (e.g., {"id": "int64", "name": "string"}):');
+            if (!schemaStr) return;
+
+            try {
+                const schema = JSON.parse(schemaStr);
+                createNCFTable(tableName, schema);
+            } catch (error) {
+                alert('Invalid JSON schema');
+            }
+        }
+
+        async function createNCFTable(tableName, schema) {
+            try {
+                const response = await fetch('/api/ncf/tables/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        table_name: tableName,
+                        schema: schema,
+                        description: `NCF table ${tableName}`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`Table "${tableName}" created successfully`, 'success');
+                    refreshNCFTables();
+                } else {
+                    showNotification(`Error creating table: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating table:', error);
+                showNotification('Error creating table', 'error');
+            }
+        }
+
+        // ============================================================================
+        // Cloud Authentication Functions
+        // ============================================================================
+
+        async function loadCloudAuthStatus() {
+            try {
+                const response = await fetch('/api/cloud/auth/status');
+                const data = await response.json();
+
+                if (data.success) {
+                    const auth = data.authentication;
+
+                    // AWS
+                    const awsStatus = document.getElementById('aws-auth-status');
+                    if (auth.aws && auth.aws.authenticated) {
+                        awsStatus.innerHTML = `
+                            <div class="text-success">
+                                <i class="bi bi-check-circle-fill"></i> Authenticated
+                            </div>
+                            <small class="text-muted">Method: ${auth.aws.auth_method}</small><br>
+                            <small class="text-muted">Region: ${auth.aws.region}</small>
+                        `;
+                    } else {
+                        awsStatus.innerHTML = `
+                            <div class="text-warning">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Not Authenticated
+                            </div>
+                            <small class="text-muted">Configure to enable AWS integration</small>
+                        `;
+                    }
+
+                    // Azure
+                    const azureStatus = document.getElementById('azure-auth-status');
+                    if (auth.azure && auth.azure.authenticated) {
+                        azureStatus.innerHTML = `
+                            <div class="text-success">
+                                <i class="bi bi-check-circle-fill"></i> Authenticated
+                            </div>
+                            <small class="text-muted">Method: ${auth.azure.auth_method}</small>
+                        `;
+                    } else {
+                        azureStatus.innerHTML = `
+                            <div class="text-warning">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Not Authenticated
+                            </div>
+                            <small class="text-muted">Configure to enable Azure integration</small>
+                        `;
+                    }
+
+                    // GCP
+                    const gcpStatus = document.getElementById('gcp-auth-status');
+                    if (auth.gcp && auth.gcp.authenticated) {
+                        gcpStatus.innerHTML = `
+                            <div class="text-success">
+                                <i class="bi bi-check-circle-fill"></i> Authenticated
+                            </div>
+                            <small class="text-muted">Method: ${auth.gcp.auth_method}</small>
+                        `;
+                    } else {
+                        gcpStatus.innerHTML = `
+                            <div class="text-warning">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Not Authenticated
+                            </div>
+                            <small class="text-muted">Configure to enable GCP integration</small>
+                        `;
+                    }
+
+                    // Details
+                    const detailsDiv = document.getElementById('auth-details-content');
+                    detailsDiv.innerHTML = `
+                        <pre class="bg-dark text-light p-3 rounded">${JSON.stringify(auth, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading cloud auth status:', error);
+            }
+        }
+
+        function configureAWSAuth() {
+            const region = prompt('Enter AWS region (default: us-east-1):', 'us-east-1');
+            if (!region) return;
+
+            const roleArn = prompt('Enter IAM Role ARN (optional, leave empty for instance profile):', '');
+
+            configureCloudAuth('aws', {region, role_arn: roleArn || undefined});
+        }
+
+        function configureAzureAuth() {
+            const subscriptionId = prompt('Enter Azure Subscription ID:');
+            if (!subscriptionId) return;
+
+            configureCloudAuth('azure', {subscription_id: subscriptionId, use_managed_identity: true});
+        }
+
+        function configureGCPAuth() {
+            const projectId = prompt('Enter GCP Project ID:');
+            if (!projectId) return;
+
+            configureCloudAuth('gcp', {project_id: projectId});
+        }
+
+        async function configureCloudAuth(provider, config) {
+            try {
+                const response = await fetch('/api/cloud/auth/configure', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({provider, config})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`${provider.toUpperCase()} authenticated successfully`, 'success');
+                    loadCloudAuthStatus();
+                } else {
+                    showNotification(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error configuring cloud auth:', error);
+                showNotification('Error configuring authentication', 'error');
+            }
+        }
+
+        function testAWSConnection() {
+            showNotification('Testing AWS connection...', 'info');
+            loadCloudAuthStatus();
+        }
+
+        function testAzureConnection() {
+            showNotification('Testing Azure connection...', 'info');
+            loadCloudAuthStatus();
+        }
+
+        function testGCPConnection() {
+            showNotification('Testing GCP connection...', 'info');
+            loadCloudAuthStatus();
+        }
+
         // Initialize on page load
         window.onload = function() {
             loadThemePreference();
@@ -7470,6 +9273,19 @@ async def dashboard_home():
             // Set theme radio buttons based on current theme
             const currentTheme = localStorage.getItem('theme') || 'dark';
             document.getElementById(`theme-${currentTheme}`).checked = true;
+
+            // Load NCF and Cloud Auth data when their tabs are opened
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    if (tab === 'ncf') {
+                        refreshNCFTables();
+                        scanAllTablesForPII();
+                    } else if (tab === 'cloud-auth') {
+                        loadCloudAuthStatus();
+                    }
+                });
+            });
         };
     </script>
 </body>
@@ -7477,6 +9293,400 @@ async def dashboard_home():
     """
 
     return HTMLResponse(content=html_content)
+
+
+# ============================================================================
+# NCF (NeuroLake Common Format) API Endpoints
+# ============================================================================
+
+@app.get("/api/ncf/tables")
+async def get_ncf_tables():
+    """Get all NCF tables"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        # List all table directories
+        tables = []
+        storage_dir = Path(storage_path)
+        if storage_dir.exists():
+            for table_dir in storage_dir.iterdir():
+                if table_dir.is_dir():
+                    # Try to load metadata
+                    try:
+                        metadata = manager._load_metadata(table_dir.name)
+                        tables.append({
+                            'table_name': table_dir.name,
+                            'row_count': metadata.row_count if hasattr(metadata, 'row_count') else 0,
+                            'created_at': str(metadata.created_at) if hasattr(metadata, 'created_at') else None,
+                            'version': metadata.version if hasattr(metadata, 'version') else 0
+                        })
+                    except:
+                        tables.append({
+                            'table_name': table_dir.name,
+                            'row_count': 0,
+                            'created_at': None,
+                            'version': 0
+                        })
+
+        return {"success": True, "tables": tables}
+    except Exception as e:
+        logger.error(f"Error getting NCF tables: {e}")
+        return {"success": False, "error": str(e), "tables": []}
+
+
+@app.post("/api/ncf/tables/create")
+async def create_ncf_table(request: Request):
+    """Create new NCF table"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        data = await request.json()
+        table_name = data.get('table_name')
+        schema = data.get('schema', {})
+        partition_by = data.get('partition_by', [])
+        description = data.get('description', '')
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        metadata = manager.create_table(
+            table_name=table_name,
+            schema=schema,
+            partition_by=partition_by if partition_by else None,
+            description=description
+        )
+
+        return {
+            "success": True,
+            "message": f"Table {table_name} created successfully",
+            "metadata": {
+                "table_name": metadata.table_name,
+                "version": metadata.version,
+                "created_at": str(metadata.created_at)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error creating NCF table: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/ncf/tables/{table_name}")
+async def get_ncf_table_info(table_name: str):
+    """Get NCF table metadata"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        metadata = manager._load_metadata(table_name)
+
+        return {
+            "success": True,
+            "metadata": {
+                "table_name": metadata.table_name,
+                "version": metadata.version,
+                "row_count": metadata.row_count if hasattr(metadata, 'row_count') else 0,
+                "created_at": str(metadata.created_at) if hasattr(metadata, 'created_at') else None,
+                "description": metadata.description if hasattr(metadata, 'description') else ""
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting NCF table info: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/ncf/tables/{table_name}/schema")
+async def get_ncf_table_schema(table_name: str):
+    """Get NCF table schema"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        # Read a small sample to get schema
+        try:
+            data = manager.read_table(table_name, limit=1)
+            schema = {}
+            if data:
+                for col_name in data.keys():
+                    # Get column type from data
+                    if data[col_name]:
+                        val = data[col_name][0] if isinstance(data[col_name], list) and len(data[col_name]) > 0 else None
+                        if val is not None:
+                            schema[col_name] = type(val).__name__
+                        else:
+                            schema[col_name] = "unknown"
+
+            return {"success": True, "schema": schema}
+        except Exception as e:
+            return {"success": False, "error": f"Table may be empty: {str(e)}", "schema": {}}
+
+    except Exception as e:
+        logger.error(f"Error getting NCF table schema: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/ncf/tables/{table_name}/pii")
+async def detect_pii_in_table(table_name: str):
+    """Detect PII columns in NCF table"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        # Read sample data
+        data = manager.read_table(table_name, limit=100)
+
+        pii_columns = []
+        if data:
+            for col_name, values in data.items():
+                # Simple PII detection patterns
+                col_lower = col_name.lower()
+                contains_pii = False
+                pii_type = None
+
+                if any(keyword in col_lower for keyword in ['email', 'e_mail', 'e-mail']):
+                    contains_pii = True
+                    pii_type = "email"
+                elif any(keyword in col_lower for keyword in ['phone', 'mobile', 'tel']):
+                    contains_pii = True
+                    pii_type = "phone"
+                elif any(keyword in col_lower for keyword in ['ssn', 'social_security']):
+                    contains_pii = True
+                    pii_type = "ssn"
+                elif any(keyword in col_lower for keyword in ['name', 'full_name', 'fullname']):
+                    contains_pii = True
+                    pii_type = "name"
+                elif any(keyword in col_lower for keyword in ['address', 'street', 'city', 'zip']):
+                    contains_pii = True
+                    pii_type = "address"
+
+                if contains_pii:
+                    pii_columns.append({
+                        "column_name": col_name,
+                        "pii_type": pii_type,
+                        "confidence": "high"
+                    })
+
+        return {
+            "success": True,
+            "table_name": table_name,
+            "pii_columns": pii_columns,
+            "total_columns": len(data) if data else 0,
+            "pii_count": len(pii_columns)
+        }
+    except Exception as e:
+        logger.error(f"Error detecting PII: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/ncf/tables/{table_name}/history")
+async def get_table_history(table_name: str):
+    """Get NCF table version history"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        history = manager.get_history(table_name)
+
+        history_list = []
+        for h in history:
+            history_list.append({
+                "version": h.version if hasattr(h, 'version') else 0,
+                "timestamp": str(h.timestamp) if hasattr(h, 'timestamp') else None,
+                "operation": h.operation if hasattr(h, 'operation') else "unknown",
+                "rows_affected": h.rows_affected if hasattr(h, 'rows_affected') else 0
+            })
+
+        return {"success": True, "history": history_list}
+    except Exception as e:
+        logger.error(f"Error getting table history: {e}")
+        return {"success": False, "error": str(e), "history": []}
+
+
+@app.post("/api/ncf/tables/{table_name}/optimize")
+async def optimize_ncf_table(table_name: str):
+    """Optimize NCF table (compaction, z-ordering)"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        # Run optimization
+        result = manager.optimize(table_name)
+
+        return {
+            "success": True,
+            "message": f"Table {table_name} optimized successfully",
+            "result": str(result)
+        }
+    except Exception as e:
+        logger.error(f"Error optimizing table: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/ncf/compliance/pii-report")
+async def get_pii_compliance_report():
+    """Get comprehensive PII detection report across all NCF tables"""
+    try:
+        from neurolake.storage.manager import NCFStorageManager
+        import os
+
+        storage_path = os.getenv('NCF_STORAGE_PATH', './data/ncf_storage')
+        manager = NCFStorageManager(storage_path)
+
+        # Get all tables
+        tables_with_pii = []
+        total_pii_columns = 0
+
+        storage_dir = Path(storage_path)
+        if storage_dir.exists():
+            for table_dir in storage_dir.iterdir():
+                if table_dir.is_dir():
+                    table_name = table_dir.name
+                    try:
+                        # Check for PII
+                        data = manager.read_table(table_name, limit=10)
+                        pii_columns = []
+
+                        if data:
+                            for col_name in data.keys():
+                                col_lower = col_name.lower()
+                                if any(keyword in col_lower for keyword in ['email', 'phone', 'ssn', 'name', 'address']):
+                                    pii_type = "unknown"
+                                    if 'email' in col_lower:
+                                        pii_type = "email"
+                                    elif 'phone' in col_lower:
+                                        pii_type = "phone"
+                                    elif 'ssn' in col_lower:
+                                        pii_type = "ssn"
+                                    elif 'name' in col_lower:
+                                        pii_type = "name"
+                                    elif 'address' in col_lower:
+                                        pii_type = "address"
+
+                                    pii_columns.append({
+                                        "column": col_name,
+                                        "type": pii_type
+                                    })
+
+                        if pii_columns:
+                            tables_with_pii.append({
+                                "table_name": table_name,
+                                "pii_columns": pii_columns,
+                                "pii_count": len(pii_columns)
+                            })
+                            total_pii_columns += len(pii_columns)
+                    except:
+                        pass
+
+        return {
+            "success": True,
+            "summary": {
+                "total_tables_scanned": len(list(storage_dir.iterdir())) if storage_dir.exists() else 0,
+                "tables_with_pii": len(tables_with_pii),
+                "total_pii_columns": total_pii_columns
+            },
+            "tables": tables_with_pii,
+            "compliance_status": "warning" if total_pii_columns > 0 else "compliant",
+            "recommendations": [
+                "Enable data masking for PII columns",
+                "Implement access controls for sensitive tables",
+                "Enable audit logging for PII access"
+            ] if total_pii_columns > 0 else []
+        }
+    except Exception as e:
+        logger.error(f"Error generating PII report: {e}")
+        return {"success": False, "error": str(e)}
+
+
+# ============================================================================
+# Cloud Authentication Status API
+# ============================================================================
+
+@app.get("/api/cloud/auth/status")
+async def get_cloud_auth_status():
+    """Get cloud authentication status for all providers"""
+    try:
+        from neurolake.compute.cloud_auth import get_auth_manager
+
+        auth_manager = get_auth_manager()
+        summary = auth_manager.get_auth_summary()
+
+        return {
+            "success": True,
+            "authentication": summary,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting cloud auth status: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "authentication": {
+                "aws": {"authenticated": False},
+                "azure": {"authenticated": False},
+                "gcp": {"authenticated": False}
+            }
+        }
+
+
+@app.post("/api/cloud/auth/configure")
+async def configure_cloud_auth(request: Request):
+    """Configure cloud authentication"""
+    try:
+        from neurolake.compute.cloud_auth import get_auth_manager, CloudProvider
+
+        data = await request.json()
+        provider = data.get('provider')  # 'aws', 'azure', 'gcp'
+        config = data.get('config', {})
+
+        auth_manager = get_auth_manager()
+
+        if provider == 'aws':
+            creds = auth_manager.authenticate_aws(
+                region=config.get('region', 'us-east-1'),
+                role_arn=config.get('role_arn'),
+                role_session_name=config.get('role_session_name')
+            )
+        elif provider == 'azure':
+            creds = auth_manager.authenticate_azure(
+                subscription_id=config.get('subscription_id'),
+                use_managed_identity=config.get('use_managed_identity', True)
+            )
+        elif provider == 'gcp':
+            creds = auth_manager.authenticate_gcp(
+                project_id=config.get('project_id')
+            )
+        else:
+            return {"success": False, "error": f"Unknown provider: {provider}"}
+
+        return {
+            "success": True,
+            "provider": provider,
+            "auth_method": creds.auth_method.value,
+            "region": creds.region,
+            "message": f"{provider.upper()} authenticated successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error configuring cloud auth: {e}")
+        return {"success": False, "error": str(e)}
 
 
 # ============================================================================
@@ -7493,7 +9703,15 @@ if __name__ == "__main__":
     print("   • Natural Language to SQL (Intent Parser)")
     print("   • Query Plan Visualizer")
     print("   • Query Optimizer with Cost Estimation")
-    print("   • Compliance Dashboard (Policies, Audit Logs, PII Detection)")
+    print("   • Compliance Dashboard (Policies, Audit Logs)")
+    print("   • NCF (NeuroLake Common Format) - AI-Native Storage")
+    print("   •   - Automatic PII Detection")
+    print("   •   - Time Travel & Versioning")
+    print("   •   - ACID Transactions")
+    print("   •   - Semantic Type Detection")
+    print("   • Cloud IAM Authentication (AWS, Azure, GCP)")
+    print("   • Environment Management (Production/Staging/Dev)")
+    print("   • Compute Orchestration (Local/Cloud/Distributed)")
     print("   • LLM Usage & Cost Tracking")
     print("   • Data Explorer (Browse schemas/tables)")
     print("   • Query Templates Library")

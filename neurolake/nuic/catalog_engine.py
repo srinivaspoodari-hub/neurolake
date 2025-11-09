@@ -707,3 +707,20 @@ class NUICEngine:
         if self.conn:
             self.conn.close()
             logger.info("NUIC database connection closed")
+
+    def __enter__(self):
+        """Context manager entry - return self for use in 'with' statement"""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensure connection is closed"""
+        self.close()
+        return False  # Don't suppress exceptions
+
+    def __del__(self):
+        """Destructor - ensure connection is closed on garbage collection"""
+        try:
+            self.close()
+        except Exception:
+            # Silently ignore errors during cleanup
+            pass

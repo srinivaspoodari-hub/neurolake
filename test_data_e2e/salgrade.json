@@ -1,0 +1,26 @@
+[
+  {
+    "grade": 1,
+    "min_salary": 30000,
+    "max_salary": 50000,
+    "grade_name": "Junior"
+  },
+  {
+    "grade": 2,
+    "min_salary": 50001,
+    "max_salary": 75000,
+    "grade_name": "Mid-Level"
+  },
+  {
+    "grade": 3,
+    "min_salary": 75001,
+    "max_salary": 100000,
+    "grade_name": "Senior"
+  },
+  {
+    "grade": 4,
+    "min_salary": 100001,
+    "max_salary": 150000,
+    "grade_name": "Principal"
+  }
+]

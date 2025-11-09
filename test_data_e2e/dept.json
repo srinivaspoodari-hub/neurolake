@@ -1,0 +1,20 @@
+[
+  {
+    "dept_id": 10,
+    "dept_name": "Engineering",
+    "manager_id": 1001,
+    "budget": 500000
+  },
+  {
+    "dept_id": 20,
+    "dept_name": "Sales",
+    "manager_id": 1002,
+    "budget": 350000
+  },
+  {
+    "dept_id": 30,
+    "dept_name": "Marketing",
+    "manager_id": 1004,
+    "budget": 250000
+  }
+]

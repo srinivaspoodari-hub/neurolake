@@ -1,0 +1,57 @@
+[
+  {
+    "emp_id": 1001,
+    "emp_name": "John Smith",
+    "emp_email": "john.smith@example.com",
+    "emp_phone": "+1-555-0101",
+    "dept_id": 10,
+    "location_id": 1,
+    "salary": 75000,
+    "hire_date": "2020-01-15",
+    "ssn": "123-45-6789"
+  },
+  {
+    "emp_id": 1002,
+    "emp_name": "Jane Doe",
+    "emp_email": "jane.doe@example.com",
+    "emp_phone": "+1-555-0102",
+    "dept_id": 20,
+    "location_id": 2,
+    "salary": 85000,
+    "hire_date": "2019-03-20",
+    "ssn": "987-65-4321"
+  },
+  {
+    "emp_id": 1003,
+    "emp_name": "Bob Johnson",
+    "emp_email": "bob.johnson@example.com",
+    "emp_phone": "+1-555-0103",
+    "dept_id": 10,
+    "location_id": 1,
+    "salary": 65000,
+    "hire_date": "2021-06-10",
+    "ssn": "456-78-9012"
+  },
+  {
+    "emp_id": 1004,
+    "emp_name": "Alice Williams",
+    "emp_email": "alice.williams@example.com",
+    "emp_phone": "+1-555-0104",
+    "dept_id": 30,
+    "location_id": 3,
+    "salary": 95000,
+    "hire_date": "2018-11-05",
+    "ssn": "321-54-9876"
+  },
+  {
+    "emp_id": 1005,
+    "emp_name": "Charlie Brown",
+    "emp_email": "charlie.brown@example.com",
+    "emp_phone": "+1-555-0105",
+    "dept_id": 20,
+    "location_id": 2,
+    "salary": 72000,
+    "hire_date": "2020-08-22",
+    "ssn": "654-32-1098"
+  }
+]

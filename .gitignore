@@ -90,3 +90,5 @@ models/*.onnx
 tmp/
 temp/
 *.tmp
+core/ncf-rust/target/
+nul

@@ -1,0 +1,33 @@
+{
+  "workflow_name": "employee_etl_pipeline",
+  "description": "Complete ETL for employee data",
+  "steps": [
+    {
+      "step_id": 1,
+      "name": "ingest_employee",
+      "type": "ingestion",
+      "source": "test_data_e2e/employee.json",
+      "target": "employee"
+    },
+    {
+      "step_id": 2,
+      "name": "ingest_dept",
+      "type": "ingestion",
+      "source": "test_data_e2e/dept.json",
+      "target": "dept"
+    },
+    {
+      "step_id": 3,
+      "name": "join_transform",
+      "type": "transformation",
+      "sql": "SELECT e.*, d.dept_name FROM employee e JOIN dept d ON e.dept_id = d.dept_id"
+    },
+    {
+      "step_id": 4,
+      "name": "pii_scan",
+      "type": "compliance",
+      "action": "scan_pii",
+      "target": "employee"
+    }
+  ]
+}

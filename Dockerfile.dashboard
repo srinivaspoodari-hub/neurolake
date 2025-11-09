@@ -55,6 +55,12 @@ COPY notebook_ui.html ./
 COPY notebook_export.py* ./
 COPY notebook_*.py* ./
 
+# Copy test data for E2E testing
+COPY test_data_e2e/ ./test_data_e2e/
+
+# Copy test scripts
+COPY test_*.py* ./
+
 # Expose dashboard port
 EXPOSE 5000
 

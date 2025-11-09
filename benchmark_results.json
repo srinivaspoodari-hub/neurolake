@@ -1,64 +1,68 @@
 {
   "ncf": {
     "initial_load": {
-      "time": 0.08399629592895508,
-      "speed": 59526.43440645348,
-      "file_size": 222948,
-      "raw_data_size": 2097479,
-      "memory_delta": 1.51953125
+      "time": 0.9826006889343262,
+      "speed": 101770.74077614826,
+      "file_size": 4175057,
+      "raw_data_size": 42166259,
+      "memory_delta": 4.0546875
     },
     "append": {
-      "time": 0.08593058586120605,
-      "speed": 5818.649960185229,
-      "memory_delta": 0.6796875
+      "time": 0.12204670906066895,
+      "speed": 81935.84306340484,
+      "memory_delta": 1.92578125
     },
     "full_scan": {
-      "time": 0.13795924186706543,
-      "speed": 39866.84708879222,
-      "rows": 5500,
-      "memory_delta": 3.48828125
+      "time": 0.22051000595092773,
+      "speed": 498843.5763975236,
+      "rows": 110000,
+      "memory_delta": 73.41796875
     },
     "column_select": {
-      "time": 0.004263877868652344,
-      "speed": 1289905.6139566093,
-      "rows": 5500,
-      "memory_delta": 0.68359375
+      "time": 0.029267549514770508,
+      "speed": 3758428.7657730314,
+      "rows": 110000,
+      "memory_delta": 16.67578125
     },
     "version_read": {
-      "time": 0.008274316787719727,
-      "speed": 604279.4986313211,
-      "rows": 5000,
-      "memory_delta": 3.55078125,
+      "time": 0.1519455909729004,
+      "speed": 658130.3173044032,
+      "rows": 100000,
+      "memory_delta": 63.390625,
       "supported": true
     },
     "timestamp_read": {
-      "supported": false
+      "time": 0.14632511138916016,
+      "speed": 683409.6967405969,
+      "rows": 100000,
+      "memory_delta": 67.0859375,
+      "supported": true
     }
   },
   "parquet": {
     "initial_load": {
-      "time": 0.027698278427124023,
-      "speed": 180516.63438777707,
-      "file_size": 315607,
-      "raw_data_size": 2097479,
-      "memory_delta": 8.84765625
+      "time": 0.1204380989074707,
+      "speed": 830302.0465046302,
+      "file_size": 5533965,
+      "raw_data_size": 42166259,
+      "memory_delta": 38.26171875
     },
     "append": {
-      "time": 0.05009031295776367,
-      "speed": 9981.96997534437,
-      "memory_delta": 17.41796875
+      "time": 0.2811250686645508,
+      "speed": 35571.35636285921,
+      "memory_delta": 153.6953125
     },
     "full_scan": {
-      "time": 0.025658845901489258,
-      "speed": 214351.02814506463,
-      "rows": 5500,
-      "memory_delta": 5.12890625
+      "time": 0.12077140808105469,
+      "speed": 910811.6047315971,
+      "rows": 110000,
+      "memory_delta": 110.91796875
     },
     "column_select": {
-      "time": 0.002732515335083008,
-      "speed": 2012797.4871302678,
-      "rows": 5500,
-      "memory_delta": 0.34375
+      "time": 0.01332855224609375,
+      "speed": 8252959.358900973,
+      "rows": 110000,
+      "memory_delta": 2.90625
     },
     "version_read": {
       "supported": false
@@ -69,36 +73,38 @@
   },
   "delta": {
     "initial_load": {
-      "time": 0,
-      "speed": 0,
-      "memory_delta": 0,
-      "skipped": true
+      "time": 0.16044068336486816,
+      "speed": 623283.3088387174,
+      "file_size": 5378005,
+      "raw_data_size": 42166259,
+      "memory_delta": 74.734375
     },
     "append": {
-      "time": 0,
-      "speed": 0,
-      "memory_delta": 0,
-      "skipped": true
+      "time": 0.05401420593261719,
+      "speed": 185136.48080793815,
+      "memory_delta": -1.8984375
     },
     "full_scan": {
-      "time": 0,
-      "speed": 0,
-      "memory_delta": 0,
-      "skipped": true
+      "time": 0.11684942245483398,
+      "speed": 941382.4877270446,
+      "rows": 110000,
+      "memory_delta": 59.46875
     },
     "column_select": {
-      "time": 0,
-      "speed": 0,
-      "memory_delta": 0,
-      "skipped": true
+      "time": 0.015601158142089844,
+      "speed": 7050758.60382664,
+      "rows": 110000,
+      "memory_delta": 3.25
     },
     "version_read": {
-      "supported": false,
-      "skipped": true
+      "time": 0.08388519287109375,
+      "speed": 1192105.5025011369,
+      "rows": 100000,
+      "memory_delta": 62.58984375,
+      "supported": true
     },
     "timestamp_read": {
-      "supported": false,
-      "skipped": true
+      "supported": true
     }
   }
 }

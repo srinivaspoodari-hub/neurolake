@@ -1,0 +1,26 @@
+[
+  {
+    "location_id": 1,
+    "city": "San Francisco",
+    "state": "CA",
+    "address": "123 Market Street",
+    "zip_code": "94102",
+    "country": "USA"
+  },
+  {
+    "location_id": 2,
+    "city": "New York",
+    "state": "NY",
+    "address": "456 Broadway",
+    "zip_code": "10013",
+    "country": "USA"
+  },
+  {
+    "location_id": 3,
+    "city": "Seattle",
+    "state": "WA",
+    "address": "789 Pine Street",
+    "zip_code": "98101",
+    "country": "USA"
+  }
+]

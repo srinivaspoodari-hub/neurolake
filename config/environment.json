@@ -1,0 +1,23 @@
+{
+  "environment": "development",
+  "compute_allow_local": false,
+  "compute_cloud_required": false,
+  "compute_default_cloud": "aws",
+  "compute_allowed_clouds": [
+    "aws",
+    "azure",
+    "gcp"
+  ],
+  "storage_allow_local": true,
+  "storage_cloud_required": false,
+  "storage_default_cloud": "aws",
+  "storage_allowed_clouds": [
+    "aws",
+    "azure",
+    "gcp"
+  ],
+  "admin_email": null,
+  "config_locked": false,
+  "last_updated": "2025-11-07T22:17:36.642814",
+  "updated_by": "test_admin"
+}

@@ -132,18 +132,8 @@ class PermissionAssignmentRequest(BaseModel):
 # Router
 router = APIRouter(prefix="/api/auth", tags=["Authentication & RBAC"])
 
-# Dependency to get database session
-# NOTE: You'll need to implement this based on your database setup
-def get_db():
-    """Get database session - implement based on your setup"""
-    # Example implementation:
-    # from your_db_module import SessionLocal
-    # db = SessionLocal()
-    # try:
-    #     yield db
-    # finally:
-    #     db.close()
-    raise NotImplementedError("Database session dependency not implemented")
+# Database session dependency
+from neurolake.db import get_db_session as get_db
 
 
 # ============================================================================
