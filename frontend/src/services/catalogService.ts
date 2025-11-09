@@ -158,6 +158,220 @@ class CatalogService {
     )
     return response.data
   }
+
+  /**
+   * List all schemas in the catalog
+   */
+  async listSchemas(): Promise<SchemaInfo[]> {
+    const response = await apiClient.get<{ schemas: SchemaInfo[] }>('/api/v1/catalog/schemas')
+    return response.data.schemas
+  }
+
+  /**
+   * List all tables in a schema
+   */
+  async listTables(schemaName: string): Promise<TableInfo[]> {
+    const response = await apiClient.get<{ tables: TableInfo[] }>(
+      `/api/v1/catalog/schemas/${schemaName}/tables`
+    )
+    return response.data.tables
+  }
+
+  /**
+   * Get detailed table information
+   */
+  async getTableDetails(schemaName: string, tableName: string): Promise<TableDetails> {
+    const response = await apiClient.get<TableDetails>(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/details`
+    )
+    return response.data
+  }
+
+  /**
+   * Get table DDL
+   */
+  async getTableDDL(schemaName: string, tableName: string): Promise<{ ddl: string }> {
+    const response = await apiClient.get<{ ddl: string }>(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/ddl`
+    )
+    return response.data
+  }
+
+  /**
+   * Get table sample data
+   */
+  async getTableSample(
+    schemaName: string,
+    tableName: string,
+    limit: number = 100
+  ): Promise<{ columns: string[]; data: any[] }> {
+    const response = await apiClient.get(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/sample`,
+      { params: { limit } }
+    )
+    return response.data
+  }
+
+  /**
+   * Get table version history
+   */
+  async getTableVersions(schemaName: string, tableName: string): Promise<TableVersion[]> {
+    const response = await apiClient.get<{ versions: TableVersion[] }>(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/versions`
+    )
+    return response.data.versions
+  }
+
+  /**
+   * Get table access permissions
+   */
+  async getTablePermissions(
+    schemaName: string,
+    tableName: string
+  ): Promise<TablePermission[]> {
+    const response = await apiClient.get<{ permissions: TablePermission[] }>(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/permissions`
+    )
+    return response.data.permissions
+  }
+
+  /**
+   * Grant table access to user/group
+   */
+  async grantAccess(
+    schemaName: string,
+    tableName: string,
+    data: {
+      principal_type: 'user' | 'group' | 'organization'
+      principal_id: string | number
+      permissions: string[]
+    }
+  ): Promise<void> {
+    await apiClient.post(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/permissions`,
+      data
+    )
+  }
+
+  /**
+   * Revoke table access
+   */
+  async revokeAccess(
+    schemaName: string,
+    tableName: string,
+    permissionId: number
+  ): Promise<void> {
+    await apiClient.delete(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}/permissions/${permissionId}`
+    )
+  }
+
+  /**
+   * Create new table
+   */
+  async createTable(
+    schemaName: string,
+    data: {
+      name: string
+      columns: Array<{ name: string; type: string; nullable?: boolean; description?: string }>
+      description?: string
+      format?: string
+      location?: string
+      properties?: Record<string, any>
+    }
+  ): Promise<TableDetails> {
+    const response = await apiClient.post<TableDetails>(
+      `/api/v1/catalog/schemas/${schemaName}/tables`,
+      data
+    )
+    return response.data
+  }
+
+  /**
+   * Delete table
+   */
+  async deleteTable(schemaName: string, tableName: string): Promise<void> {
+    await apiClient.delete(`/api/v1/catalog/schemas/${schemaName}/tables/${tableName}`)
+  }
+
+  /**
+   * Update table properties
+   */
+  async updateTableProperties(
+    schemaName: string,
+    tableName: string,
+    properties: Record<string, any>
+  ): Promise<TableDetails> {
+    const response = await apiClient.patch<TableDetails>(
+      `/api/v1/catalog/schemas/${schemaName}/tables/${tableName}`,
+      { properties }
+    )
+    return response.data
+  }
+}
+
+// Additional Types
+export interface SchemaInfo {
+  name: string
+  database?: string
+  description?: string
+  table_count: number
+  created_at: string
+  owner?: string
+}
+
+export interface TableInfo {
+  name: string
+  schema: string
+  type: 'table' | 'view' | 'external'
+  format?: string
+  row_count?: number
+  size_bytes?: number
+  created_at: string
+  updated_at: string
+  description?: string
+}
+
+export interface TableDetails {
+  name: string
+  schema: string
+  database?: string
+  type: 'table' | 'view' | 'external'
+  format: string
+  location?: string
+  description?: string
+  owner?: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+  last_accessed?: string
+  columns: ColumnSchema[]
+  properties?: Record<string, any>
+  statistics?: {
+    row_count?: number
+    size_bytes?: number
+    file_count?: number
+  }
+  partitions?: Array<{ name: string; type: string }>
+}
+
+export interface TableVersion {
+  version: number
+  created_at: string
+  created_by: string
+  operation: 'CREATE' | 'UPDATE' | 'DELETE' | 'ALTER'
+  changes?: Record<string, any>
+  snapshot_id?: string
+}
+
+export interface TablePermission {
+  id: number
+  principal_type: 'user' | 'group' | 'organization'
+  principal_id: string | number
+  principal_name: string
+  permissions: string[]
+  granted_by?: string
+  granted_at: string
 }
 
 // Export singleton instance

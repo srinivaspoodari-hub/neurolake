@@ -13,6 +13,7 @@ import { usePipelines } from '@/hooks/usePipelines'
 import { queryService } from '@/services/queryService'
 import { agentsService } from '@/services/agentsService'
 import { formatDistanceToNow } from 'date-fns'
+import CatalogBrowser from '@/components/CatalogBrowser'
 
 type TabType = 'overview' | 'query' | 'agents' | 'compliance' | 'audit' | 'data' | 'pipelines'
 
@@ -46,7 +47,7 @@ export default function UnifiedDashboard() {
                 { id: 'agents', label: '🤖 AI Agents', icon: '🤖' },
                 { id: 'compliance', label: '🔒 Compliance', icon: '🔒' },
                 { id: 'audit', label: '📝 Audit', icon: '📝' },
-                { id: 'data', label: '📁 Data', icon: '📁' },
+                { id: 'data', label: '📁 NUIC Catalog', icon: '📁' },
                 { id: 'pipelines', label: '⚙️ Pipelines', icon: '⚙️' },
               ].map((tab) => (
                 <button
@@ -71,7 +72,7 @@ export default function UnifiedDashboard() {
             {activeTab === 'agents' && <AgentsTab />}
             {activeTab === 'compliance' && <ComplianceTab />}
             {activeTab === 'audit' && <AuditTab />}
-            {activeTab === 'data' && <DataTab />}
+            {activeTab === 'data' && <CatalogBrowser />}
             {activeTab === 'pipelines' && <PipelinesTab />}
           </div>
         </div>
@@ -539,41 +540,7 @@ function AuditTab() {
   )
 }
 
-// Data Tab - File Upload & Catalog
-function DataTab() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold mb-4">📤 Upload Data</h2>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <div className="text-4xl mb-2">📁</div>
-          <div className="text-gray-600 mb-2">Drag and drop your CSV file here</div>
-          <div className="text-sm text-gray-500">or click to browse</div>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Select File
-          </button>
-        </div>
-        <div className="mt-4 text-sm text-gray-600">
-          <strong>Supported formats:</strong> CSV, Parquet, JSON
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold mb-4">📊 Data Catalog</h2>
-        <div className="text-gray-600">
-          <p>Your uploaded datasets will appear here.</p>
-          <p className="text-sm mt-2">Use the API to upload your first dataset:</p>
-          <pre className="bg-gray-100 p-3 rounded mt-2 text-xs overflow-x-auto">
-{`curl -X POST http://localhost:8000/api/v1/data/upload \\
-  -H "Authorization: Bearer $TOKEN" \\
-  -F "file=@your_data.csv" \\
-  -F "table_name=my_data"`}
-          </pre>
-        </div>
-      </div>
-    </div>
-  )
-}
+// Data Tab replaced with CatalogBrowser component (imported at top)
 
 // Pipelines Tab
 function PipelinesTab() {
