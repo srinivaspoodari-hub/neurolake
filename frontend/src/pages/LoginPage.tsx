@@ -8,19 +8,16 @@ import { Database } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { login } = useAuthStore()
-  const [email, setEmail] = useState('')
+  const { login, error: authError, clearError, isLoading: authLoading } = useAuthStore()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>({})
 
   const validate = () => {
-    const newErrors: { email?: string; password?: string } = {}
+    const newErrors: { username?: string; password?: string } = {}
 
-    if (!email) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Invalid email format'
+    if (!username) {
+      newErrors.username = 'Username or email is required'
     }
 
     if (!password) {
@@ -35,17 +32,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    clearError()
 
     if (!validate()) return
 
-    setIsLoading(true)
     try {
-      await login(email, password)
+      await login(username, password)
       navigate('/')
     } catch (error) {
-      setErrors({ email: 'Invalid credentials' })
-    } finally {
-      setIsLoading(false)
+      setErrors({ general: authError || 'Invalid credentials. Please try again.' })
     }
   }
 
@@ -67,13 +62,18 @@ export default function LoginPage() {
             successMessage="Successfully logged in"
           >
             <div className="space-y-4">
+              {errors.general && (
+                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                  {errors.general}
+                </div>
+              )}
               <AccessibleFormField
-                id="email"
-                label="Email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                error={errors.email}
+                id="username"
+                label="Username or Email"
+                type="text"
+                value={username}
+                onChange={setUsername}
+                error={errors.username}
                 required
               />
               <AccessibleFormField
@@ -85,8 +85,8 @@ export default function LoginPage() {
                 error={errors.password}
                 required
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign In'}
+              <Button type="submit" className="w-full" disabled={authLoading}>
+                {authLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </div>
           </AccessibleForm>
