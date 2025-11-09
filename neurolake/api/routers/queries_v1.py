@@ -104,8 +104,11 @@ async def execute_query(
             except Exception as e:
                 logger.warning(f"Optimization failed: {e}, using original query")
 
-        # Execute query
-        engine = NeuroLakeEngine()
+        # Execute query with database session for history persistence
+        engine = NeuroLakeEngine(
+            db_session=db,
+            user_id=current_user.id
+        )
 
         # Execute and get result as JSON
         result_df = engine.execute_sql(
@@ -225,10 +228,10 @@ async def get_query_history(
             """
             SELECT
                 query_id,
-                sql_text,
+                query_text,
                 execution_time_ms,
-                row_count,
-                status,
+                rows_read as row_count,
+                query_status,
                 created_at,
                 error_message
             FROM query_history
@@ -242,8 +245,8 @@ async def get_query_history(
             {
                 "query_id": row[0],
                 "sql": row[1],
-                "execution_time_ms": row[2],
-                "row_count": row[3],
+                "execution_time_ms": row[2] or 0,
+                "row_count": row[3] or 0,
                 "status": row[4],
                 "timestamp": row[5].isoformat() if row[5] else None,
                 "error": row[6]

@@ -38,15 +38,19 @@ class NeuroLakeEngine:
         default_timeout: int = 300,
         enable_validation: bool = True,
         track_history: bool = True,
+        db_session: Optional[Any] = None,
+        user_id: Optional[int] = None,
     ):
         self.default_timeout = default_timeout
         self.enable_validation = enable_validation
         self.track_history = track_history
-        
+        self.db_session = db_session
+        self.user_id = user_id
+
         self._active_queries: Dict[str, threading.Thread] = {}
         self._cancelled_queries: set = set()
         self._query_history: List[Dict[str, Any]] = []
-        
+
         if spark_session is None and SPARK_AVAILABLE:
             try:
                 from neurolake.spark import get_spark_session
@@ -56,7 +60,7 @@ class NeuroLakeEngine:
                 self.spark = None
         else:
             self.spark = spark_session
-        
+
         self.backend = "spark" if self.spark is not None else "duckdb"
         self._duckdb_conn = None
     
@@ -377,7 +381,10 @@ class NeuroLakeEngine:
     def _add_to_history(
         self, query_id, sql, tables, exec_time, status, error=None
     ):
-        """Add to query history."""
+        """Add to query history (in-memory and database)."""
+        timestamp = datetime.now()
+
+        # Add to in-memory history
         self._query_history.append({
             "query_id": query_id,
             "sql": sql,
@@ -385,8 +392,73 @@ class NeuroLakeEngine:
             "execution_time": exec_time,
             "status": status,
             "error": error,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": timestamp.isoformat(),
         })
+
+        # Also persist to database if db_session is available
+        if self.db_session is not None:
+            try:
+                from sqlalchemy import text
+
+                # Determine query type from SQL
+                query_type = self._get_query_type(sql)
+
+                # Calculate rows read (if result is available, we could track this better)
+                # For now, set to NULL and let it be updated later
+
+                insert_query = text("""
+                    INSERT INTO query_history (
+                        query_id, user_id, query_text, query_type, query_status,
+                        tables_accessed, execution_time_ms, started_at, completed_at,
+                        error_message, error_type
+                    ) VALUES (
+                        :query_id, :user_id, :query_text, :query_type, :query_status,
+                        :tables_accessed, :execution_time_ms, :started_at, :completed_at,
+                        :error_message, :error_type
+                    )
+                """)
+
+                self.db_session.execute(insert_query, {
+                    "query_id": query_id,
+                    "user_id": self.user_id,
+                    "query_text": sql,
+                    "query_type": query_type,
+                    "query_status": status,
+                    "tables_accessed": tables,
+                    "execution_time_ms": int(exec_time * 1000),  # Convert to milliseconds
+                    "started_at": timestamp,
+                    "completed_at": timestamp,
+                    "error_message": error,
+                    "error_type": type(error).__name__ if error else None,
+                })
+
+                self.db_session.commit()
+            except Exception as e:
+                # Don't fail the query if history logging fails
+                import logging
+                logging.warning(f"Failed to persist query history to database: {e}")
+                if self.db_session:
+                    self.db_session.rollback()
+
+    def _get_query_type(self, sql: str) -> str:
+        """Determine query type from SQL."""
+        sql_upper = sql.strip().upper()
+        if sql_upper.startswith('SELECT') or sql_upper.startswith('WITH'):
+            return 'SELECT'
+        elif sql_upper.startswith('INSERT'):
+            return 'INSERT'
+        elif sql_upper.startswith('UPDATE'):
+            return 'UPDATE'
+        elif sql_upper.startswith('DELETE'):
+            return 'DELETE'
+        elif sql_upper.startswith('CREATE'):
+            return 'CREATE'
+        elif sql_upper.startswith('DROP'):
+            return 'DROP'
+        elif sql_upper.startswith('ALTER'):
+            return 'ALTER'
+        else:
+            return 'OTHER'
     
     def get_query_history(self, limit: Optional[int] = None) -> List[Dict]:
         """Get query history."""

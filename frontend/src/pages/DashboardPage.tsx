@@ -1,47 +1,56 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Activity, Database, GitBranch, TrendingUp } from 'lucide-react'
+import { Activity, Database, GitBranch, TrendingUp, Clock } from 'lucide-react'
 import { DashboardSkeleton } from '@/components/loading/DashboardSkeleton'
-import { useState, useEffect } from 'react'
+import { useDashboardStats, useRecentQueries } from '@/hooks/useDashboard'
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: recentQueries, isLoading: queriesLoading } = useRecentQueries(5)
 
-  useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (isLoading) {
+  if (statsLoading) {
     return <DashboardSkeleton />
   }
 
-  const stats = [
+  const statsCards = [
     {
       title: 'Total Queries',
-      value: '1,234',
-      description: '+20% from last month',
+      value: stats?.totalQueries.toLocaleString() || '0',
+      description: 'Executed queries',
       icon: Activity,
     },
     {
       title: 'Active Pipelines',
-      value: '12',
-      description: '3 running now',
+      value: stats?.activePipelines.toString() || '0',
+      description: 'Running pipelines',
       icon: GitBranch,
     },
     {
       title: 'Data Processed',
-      value: '2.4 TB',
-      description: '+12% from last week',
+      value: stats?.dataProcessed || '0 TB',
+      description: 'Total data volume',
       icon: Database,
     },
     {
       title: 'Avg Query Time',
-      value: '245ms',
-      description: '-8% improvement',
+      value: stats?.avgQueryTime || '0ms',
+      description: 'Average execution time',
       icon: TrendingUp,
     },
   ]
+
+  const formatTimeAgo = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+
+    if (diffMins < 1) return 'just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    return `${diffDays}d ago`
+  }
 
   return (
     <div className="space-y-6">
@@ -53,7 +62,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
+        {statsCards.map((stat) => {
           const Icon = stat.icon
           return (
             <Card key={stat.title}>
@@ -84,7 +93,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Chart placeholder - Recharts integration would go here
+              Chart visualization coming soon - Connect Recharts to query metrics
             </div>
           </CardContent>
         </Card>
@@ -97,22 +106,44 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <Activity className="h-4 w-4" />
+            {queriesLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-md bg-muted" />
+                ))}
+              </div>
+            ) : recentQueries && recentQueries.length > 0 ? (
+              <div className="space-y-4">
+                {recentQueries.map((query) => (
+                  <div key={query.query_id} className="flex items-start justify-between border-b pb-3 last:border-0">
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-mono text-muted-foreground line-clamp-2">
+                        {query.sql}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{query.execution_time_ms}ms</span>
+                        <span>•</span>
+                        <span>{query.row_count} rows</span>
+                        <span>•</span>
+                        <span>{formatTimeAgo(query.timestamp)}</span>
+                      </div>
+                    </div>
+                    <div className={`ml-4 rounded-full px-2 py-1 text-xs ${
+                      query.status === 'success'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {query.status}
+                    </div>
                   </div>
-                  <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium">Query {i}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Executed 2 hours ago
-                    </p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">245ms</div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+                No recent queries. Execute your first query to see it here!
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
