@@ -335,6 +335,36 @@ async def get_current_user_info(
     )
 
 
+@router.post("/verify")
+async def verify_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Verify access token validity and return token status
+
+    Returns user information and token validation status.
+    Use this endpoint to check if a token is still valid.
+    """
+    auth_service = AuthService(db)
+
+    # Token is valid if we got here (dependency succeeded)
+    return {
+        "valid": True,
+        "user_id": current_user.id,
+        "username": current_user.username,
+        "is_active": current_user.is_active,
+        "is_verified": current_user.is_verified,
+        "roles": [role.name for role in current_user.roles],
+        "permissions": list(set([
+            perm.name
+            for role in current_user.roles
+            for perm in role.permissions
+        ])),
+        "message": "Token is valid"
+    }
+
+
 @router.post("/change-password")
 async def change_password(
     password_data: PasswordChangeRequest,
