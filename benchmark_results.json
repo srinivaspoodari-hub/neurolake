@@ -1,0 +1,104 @@
+{
+  "ncf": {
+    "initial_load": {
+      "time": 0.08399629592895508,
+      "speed": 59526.43440645348,
+      "file_size": 222948,
+      "raw_data_size": 2097479,
+      "memory_delta": 1.51953125
+    },
+    "append": {
+      "time": 0.08593058586120605,
+      "speed": 5818.649960185229,
+      "memory_delta": 0.6796875
+    },
+    "full_scan": {
+      "time": 0.13795924186706543,
+      "speed": 39866.84708879222,
+      "rows": 5500,
+      "memory_delta": 3.48828125
+    },
+    "column_select": {
+      "time": 0.004263877868652344,
+      "speed": 1289905.6139566093,
+      "rows": 5500,
+      "memory_delta": 0.68359375
+    },
+    "version_read": {
+      "time": 0.008274316787719727,
+      "speed": 604279.4986313211,
+      "rows": 5000,
+      "memory_delta": 3.55078125,
+      "supported": true
+    },
+    "timestamp_read": {
+      "supported": false
+    }
+  },
+  "parquet": {
+    "initial_load": {
+      "time": 0.027698278427124023,
+      "speed": 180516.63438777707,
+      "file_size": 315607,
+      "raw_data_size": 2097479,
+      "memory_delta": 8.84765625
+    },
+    "append": {
+      "time": 0.05009031295776367,
+      "speed": 9981.96997534437,
+      "memory_delta": 17.41796875
+    },
+    "full_scan": {
+      "time": 0.025658845901489258,
+      "speed": 214351.02814506463,
+      "rows": 5500,
+      "memory_delta": 5.12890625
+    },
+    "column_select": {
+      "time": 0.002732515335083008,
+      "speed": 2012797.4871302678,
+      "rows": 5500,
+      "memory_delta": 0.34375
+    },
+    "version_read": {
+      "supported": false
+    },
+    "timestamp_read": {
+      "supported": false
+    }
+  },
+  "delta": {
+    "initial_load": {
+      "time": 0,
+      "speed": 0,
+      "memory_delta": 0,
+      "skipped": true
+    },
+    "append": {
+      "time": 0,
+      "speed": 0,
+      "memory_delta": 0,
+      "skipped": true
+    },
+    "full_scan": {
+      "time": 0,
+      "speed": 0,
+      "memory_delta": 0,
+      "skipped": true
+    },
+    "column_select": {
+      "time": 0,
+      "speed": 0,
+      "memory_delta": 0,
+      "skipped": true
+    },
+    "version_read": {
+      "supported": false,
+      "skipped": true
+    },
+    "timestamp_read": {
+      "supported": false,
+      "skipped": true
+    }
+  }
+}
