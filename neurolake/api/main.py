@@ -36,6 +36,7 @@ from neurolake.api.routers import (
     catalog_v1,
     ncf_v1,
     auth_v1,
+    pipelines_v1,
     health,
     metrics as metrics_router
 )
@@ -296,6 +297,7 @@ app.include_router(queries_v1.router, prefix="/api/v1/queries", tags=["Queries v
 app.include_router(data_v1.router, prefix="/api/v1/data", tags=["Data v1"])
 app.include_router(catalog_v1.router, prefix="/api/v1/catalog", tags=["Catalog v1"])
 app.include_router(ncf_v1.router, prefix="/api/v1/ncf", tags=["NCF v1"])
+app.include_router(pipelines_v1.router, prefix="/api/v1/pipelines", tags=["Pipelines v1"])
 
 # Setup OpenTelemetry instrumentation
 FastAPIInstrumentor.instrument_app(app)
