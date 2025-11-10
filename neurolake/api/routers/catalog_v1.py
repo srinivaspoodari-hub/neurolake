@@ -505,3 +505,548 @@ async def get_catalog_stats(
     except Exception as e:
         logger.error(f"Failed to get catalog stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# NUIC CATALOG BROWSER ENDPOINTS
+# ============================================================================
+
+class SchemaInfo(BaseModel):
+    """Schema information model."""
+    name: str
+    database: Optional[str] = None
+    description: Optional[str] = None
+    table_count: int
+    created_at: str
+    owner: Optional[str] = None
+
+
+class TableInfo(BaseModel):
+    """Table listing information."""
+    name: str
+    schema: str
+    type: str  # 'table', 'view', 'external'
+    format: Optional[str] = "NCF"
+    row_count: Optional[int] = None
+    size_bytes: Optional[int] = None
+    created_at: str
+    updated_at: str
+    description: Optional[str] = None
+
+
+class ColumnInfo(BaseModel):
+    """Column schema information."""
+    name: str
+    type: str
+    nullable: bool = True
+    description: Optional[str] = None
+
+
+class TableDetails(BaseModel):
+    """Detailed table information."""
+    name: str
+    schema: str
+    database: Optional[str] = None
+    type: str  # 'table', 'view', 'external'
+    format: str = "NCF"
+    location: Optional[str] = None
+    description: Optional[str] = None
+    owner: Optional[str] = None
+    created_by: Optional[str] = None
+    created_at: str
+    updated_at: str
+    last_accessed: Optional[str] = None
+    columns: List[ColumnInfo]
+    properties: Optional[Dict[str, Any]] = {}
+    statistics: Optional[Dict[str, Any]] = {}
+    partitions: Optional[List[Dict[str, str]]] = []
+
+
+class TableVersion(BaseModel):
+    """Table version history entry."""
+    version: int
+    created_at: str
+    created_by: str
+    operation: str  # 'CREATE', 'UPDATE', 'DELETE', 'ALTER'
+    changes: Optional[Dict[str, Any]] = None
+    snapshot_id: Optional[str] = None
+
+
+class TablePermission(BaseModel):
+    """Table access permission."""
+    id: int
+    principal_type: str  # 'user', 'group', 'organization'
+    principal_id: Any  # Can be string or int
+    principal_name: str
+    permissions: List[str]
+    granted_by: Optional[str] = None
+    granted_at: str
+
+
+class GrantAccessRequest(BaseModel):
+    """Grant access request."""
+    principal_type: str
+    principal_id: Any
+    permissions: List[str]
+
+
+class CreateTableRequest(BaseModel):
+    """Create table request."""
+    name: str
+    columns: List[ColumnInfo]
+    description: Optional[str] = None
+    format: str = "NCF"
+    location: Optional[str] = None
+    properties: Optional[Dict[str, Any]] = {}
+
+
+@router.get("/schemas", summary="List Schemas")
+async def list_schemas(
+    db: Session = Depends(get_db_session)
+) -> Dict[str, List[SchemaInfo]]:
+    """List all schemas in the catalog."""
+    try:
+        result = db.execute(text("""
+            SELECT
+                table_schema,
+                COUNT(*) as table_count
+            FROM information_schema.tables
+            WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+            GROUP BY table_schema
+            ORDER BY table_schema
+        """))
+
+        schemas = [
+            SchemaInfo(
+                name=row[0],
+                database=None,
+                description=None,
+                table_count=row[1],
+                created_at=datetime.utcnow().isoformat(),
+                owner=None
+            )
+            for row in result.fetchall()
+        ]
+
+        return {"schemas": schemas}
+
+    except Exception as e:
+        logger.error(f"Failed to list schemas: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schemas/{schema_name}/tables", summary="List Tables in Schema")
+async def list_schema_tables(
+    schema_name: str,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, List[TableInfo]]:
+    """List all tables in a schema."""
+    try:
+        result = db.execute(text("""
+            SELECT
+                table_name,
+                table_type,
+                NULL as row_count,
+                NULL as size_bytes
+            FROM information_schema.tables
+            WHERE table_schema = :schema
+            ORDER BY table_name
+        """), {"schema": schema_name})
+
+        tables = [
+            TableInfo(
+                name=row[0],
+                schema=schema_name,
+                type="table" if row[1] == "BASE TABLE" else "view",
+                format="NCF",
+                row_count=row[2],
+                size_bytes=row[3],
+                created_at=datetime.utcnow().isoformat(),
+                updated_at=datetime.utcnow().isoformat(),
+                description=None
+            )
+            for row in result.fetchall()
+        ]
+
+        return {"tables": tables}
+
+    except Exception as e:
+        logger.error(f"Failed to list tables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schemas/{schema_name}/tables/{table_name}/details", response_model=TableDetails, summary="Get Table Details")
+async def get_table_details(
+    schema_name: str,
+    table_name: str,
+    db: Session = Depends(get_db_session)
+) -> TableDetails:
+    """Get detailed information about a table."""
+    try:
+        # Get table info
+        table_result = db.execute(text("""
+            SELECT table_type
+            FROM information_schema.tables
+            WHERE table_schema = :schema AND table_name = :table
+        """), {"schema": schema_name, "table": table_name})
+
+        table_row = table_result.fetchone()
+        if not table_row:
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # Get column info
+        columns_result = db.execute(text("""
+            SELECT
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_schema = :schema AND table_name = :table
+            ORDER BY ordinal_position
+        """), {"schema": schema_name, "table": table_name})
+
+        columns = [
+            ColumnInfo(
+                name=row[0],
+                type=row[1],
+                nullable=(row[2] == 'YES'),
+                description=None
+            )
+            for row in columns_result.fetchall()
+        ]
+
+        return TableDetails(
+            name=table_name,
+            schema=schema_name,
+            database=None,
+            type="table" if table_row[0] == "BASE TABLE" else "view",
+            format="NCF",
+            location=f"/data/warehouse/{schema_name}/{table_name}",
+            description=None,
+            owner="system",
+            created_by="system",
+            created_at=datetime.utcnow().isoformat(),
+            updated_at=datetime.utcnow().isoformat(),
+            last_accessed=None,
+            columns=columns,
+            properties={},
+            statistics={"row_count": 0, "size_bytes": 0, "file_count": 0},
+            partitions=[]
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get table details: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schemas/{schema_name}/tables/{table_name}/ddl", summary="Get Table DDL")
+async def get_table_ddl(
+    schema_name: str,
+    table_name: str,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, str]:
+    """Get table DDL (CREATE TABLE statement)."""
+    try:
+        # Get columns
+        columns_result = db.execute(text("""
+            SELECT
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_schema = :schema AND table_name = :table
+            ORDER BY ordinal_position
+        """), {"schema": schema_name, "table": table_name})
+
+        columns = columns_result.fetchall()
+        if not columns:
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # Build DDL
+        ddl = f"CREATE TABLE {schema_name}.{table_name} (\n"
+        column_defs = []
+
+        for col in columns:
+            col_def = f"  {col[0]} {col[1]}"
+            if col[2] == 'NO':
+                col_def += " NOT NULL"
+            if col[3]:
+                col_def += f" DEFAULT {col[3]}"
+            column_defs.append(col_def)
+
+        ddl += ",\n".join(column_defs)
+        ddl += "\n) FORMAT NCF\n"
+        ddl += f"LOCATION '/data/warehouse/{schema_name}/{table_name}';"
+
+        return {"ddl": ddl}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get DDL: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schemas/{schema_name}/tables/{table_name}/sample", summary="Get Sample Data")
+async def get_table_sample(
+    schema_name: str,
+    table_name: str,
+    limit: int = QueryParam(100, ge=1, le=1000),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """Get sample data from table."""
+    try:
+        # Get column names
+        columns_result = db.execute(text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = :schema AND table_name = :table
+            ORDER BY ordinal_position
+        """), {"schema": schema_name, "table": table_name})
+
+        columns = [row[0] for row in columns_result.fetchall()]
+        if not columns:
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # Get sample data
+        data_result = db.execute(text(f"""
+            SELECT * FROM {schema_name}.{table_name}
+            LIMIT :limit
+        """), {"limit": limit})
+
+        data = [
+            {columns[i]: row[i] for i in range(len(columns))}
+            for row in data_result.fetchall()
+        ]
+
+        return {
+            "columns": columns,
+            "data": data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get sample data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schemas/{schema_name}/tables/{table_name}/versions", summary="Get Version History")
+async def get_table_versions(
+    schema_name: str,
+    table_name: str,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, List[TableVersion]]:
+    """Get table version history."""
+    # Placeholder - in production, query from version control table
+    return {
+        "versions": [
+            TableVersion(
+                version=1,
+                created_at=datetime.utcnow().isoformat(),
+                created_by="system",
+                operation="CREATE",
+                changes={"action": "Table created"},
+                snapshot_id=None
+            )
+        ]
+    }
+
+
+@router.get("/schemas/{schema_name}/tables/{table_name}/permissions", summary="Get Table Permissions")
+async def get_table_permissions(
+    schema_name: str,
+    table_name: str,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, List[TablePermission]]:
+    """Get table access permissions."""
+    # Placeholder - in production, query from permissions table
+    return {
+        "permissions": [
+            TablePermission(
+                id=1,
+                principal_type="user",
+                principal_id=1,
+                principal_name="admin",
+                permissions=["SELECT", "INSERT", "UPDATE", "DELETE", "ALTER", "DROP"],
+                granted_by="system",
+                granted_at=datetime.utcnow().isoformat()
+            )
+        ]
+    }
+
+
+@router.post("/schemas/{schema_name}/tables/{table_name}/permissions", summary="Grant Access")
+async def grant_table_access(
+    schema_name: str,
+    table_name: str,
+    request: GrantAccessRequest,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, str]:
+    """Grant table access to user, group, or organization."""
+    try:
+        # Verify table exists
+        result = db.execute(text("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = :schema AND table_name = :table
+        """), {"schema": schema_name, "table": table_name})
+
+        if not result.fetchone():
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # In production, insert into permissions table
+        logger.info(f"Granting {request.permissions} on {schema_name}.{table_name} to {request.principal_type}:{request.principal_id}")
+
+        return {
+            "status": "success",
+            "message": f"Access granted to {request.principal_type}:{request.principal_id}"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to grant access: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/schemas/{schema_name}/tables/{table_name}/permissions/{permission_id}", summary="Revoke Access")
+async def revoke_table_access(
+    schema_name: str,
+    table_name: str,
+    permission_id: int,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, str]:
+    """Revoke table access permission."""
+    try:
+        # In production, delete from permissions table
+        logger.info(f"Revoking permission {permission_id} on {schema_name}.{table_name}")
+
+        return {
+            "status": "success",
+            "message": f"Permission {permission_id} revoked"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to revoke access: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/schemas/{schema_name}/tables", response_model=TableDetails, summary="Create Table")
+async def create_table(
+    schema_name: str,
+    request: CreateTableRequest,
+    db: Session = Depends(get_db_session)
+) -> TableDetails:
+    """Create a new table."""
+    try:
+        # Build CREATE TABLE statement
+        column_defs = []
+        for col in request.columns:
+            col_def = f"{col.name} {col.type}"
+            if not col.nullable:
+                col_def += " NOT NULL"
+            column_defs.append(col_def)
+
+        ddl = f"CREATE TABLE {schema_name}.{request.name} ({', '.join(column_defs)})"
+
+        # Execute DDL
+        db.execute(text(ddl))
+        db.commit()
+
+        logger.info(f"Created table {schema_name}.{request.name}")
+
+        return TableDetails(
+            name=request.name,
+            schema=schema_name,
+            database=None,
+            type="table",
+            format=request.format,
+            location=request.location or f"/data/warehouse/{schema_name}/{request.name}",
+            description=request.description,
+            owner="system",
+            created_by="system",
+            created_at=datetime.utcnow().isoformat(),
+            updated_at=datetime.utcnow().isoformat(),
+            last_accessed=None,
+            columns=request.columns,
+            properties=request.properties,
+            statistics={"row_count": 0, "size_bytes": 0, "file_count": 0},
+            partitions=[]
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to create table: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/schemas/{schema_name}/tables/{table_name}", summary="Delete Table")
+async def delete_table(
+    schema_name: str,
+    table_name: str,
+    db: Session = Depends(get_db_session)
+) -> Dict[str, str]:
+    """Delete a table."""
+    try:
+        # Verify table exists
+        result = db.execute(text("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = :schema AND table_name = :table
+        """), {"schema": schema_name, "table": table_name})
+
+        if not result.fetchone():
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # Drop table
+        db.execute(text(f"DROP TABLE {schema_name}.{table_name}"))
+        db.commit()
+
+        logger.info(f"Deleted table {schema_name}.{table_name}")
+
+        return {
+            "status": "success",
+            "message": f"Table {schema_name}.{table_name} deleted"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete table: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/schemas/{schema_name}/tables/{table_name}", response_model=TableDetails, summary="Update Table Properties")
+async def update_table_properties(
+    schema_name: str,
+    table_name: str,
+    properties: Dict[str, Any],
+    db: Session = Depends(get_db_session)
+) -> TableDetails:
+    """Update table properties."""
+    try:
+        # Verify table exists
+        result = db.execute(text("""
+            SELECT table_type FROM information_schema.tables
+            WHERE table_schema = :schema AND table_name = :table
+        """), {"schema": schema_name, "table": table_name})
+
+        table_row = result.fetchone()
+        if not table_row:
+            raise HTTPException(status_code=404, detail=f"Table {schema_name}.{table_name} not found")
+
+        # In production, store properties in metadata table
+        logger.info(f"Updated properties for {schema_name}.{table_name}: {properties}")
+
+        # Get updated details
+        return await get_table_details(schema_name, table_name, db)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update table properties: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -13,8 +13,12 @@ import { usePipelines } from '@/hooks/usePipelines'
 import { queryService } from '@/services/queryService'
 import { agentsService } from '@/services/agentsService'
 import { formatDistanceToNow } from 'date-fns'
+import CatalogBrowser from '@/components/CatalogBrowser'
+import JobsManagement from '@/components/JobsManagement'
+import IntegrationsManagement from '@/components/IntegrationsManagement'
+import { useGenerateSQLFromNL, useExplainSQL } from '@/hooks/useIntegrations'
 
-type TabType = 'overview' | 'query' | 'agents' | 'compliance' | 'audit' | 'data' | 'pipelines'
+type TabType = 'overview' | 'query' | 'agents' | 'compliance' | 'audit' | 'data' | 'pipelines' | 'jobs' | 'integrations'
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -43,10 +47,12 @@ export default function UnifiedDashboard() {
               {[
                 { id: 'overview', label: '📊 Overview', icon: '📊' },
                 { id: 'query', label: '🔍 Query', icon: '🔍' },
+                { id: 'jobs', label: '⚡ Jobs & Ingestion', icon: '⚡' },
                 { id: 'agents', label: '🤖 AI Agents', icon: '🤖' },
+                { id: 'integrations', label: '🔌 Integrations', icon: '🔌' },
                 { id: 'compliance', label: '🔒 Compliance', icon: '🔒' },
                 { id: 'audit', label: '📝 Audit', icon: '📝' },
-                { id: 'data', label: '📁 Data', icon: '📁' },
+                { id: 'data', label: '📁 NUIC Catalog', icon: '📁' },
                 { id: 'pipelines', label: '⚙️ Pipelines', icon: '⚙️' },
               ].map((tab) => (
                 <button
@@ -68,10 +74,12 @@ export default function UnifiedDashboard() {
           <div className="p-6">
             {activeTab === 'overview' && <OverviewTab />}
             {activeTab === 'query' && <QueryTab />}
+            {activeTab === 'jobs' && <JobsManagement />}
             {activeTab === 'agents' && <AgentsTab />}
+            {activeTab === 'integrations' && <IntegrationsManagement />}
             {activeTab === 'compliance' && <ComplianceTab />}
             {activeTab === 'audit' && <AuditTab />}
-            {activeTab === 'data' && <DataTab />}
+            {activeTab === 'data' && <CatalogBrowser />}
             {activeTab === 'pipelines' && <PipelinesTab />}
           </div>
         </div>
@@ -236,12 +244,17 @@ function QuickActionCard({ title, description, icon, color }: any) {
   )
 }
 
-// Query Tab
+// Query Tab with Natural Language to SQL
 function QueryTab() {
+  const [mode, setMode] = useState<'sql' | 'nl'>('sql')
   const [sql, setSql] = useState('SELECT * FROM sales_data LIMIT 10;')
+  const [nlQuestion, setNlQuestion] = useState('')
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const generateSQL = useGenerateSQLFromNL()
+  const explainSQL = useExplainSQL()
 
   const handleExecute = async () => {
     setLoading(true)
@@ -258,26 +271,130 @@ function QueryTab() {
     }
   }
 
+  const handleConvertToSQL = async () => {
+    if (!nlQuestion.trim()) return
+
+    try {
+      setLoading(true)
+      setError('')
+      const response = await generateSQL.mutateAsync({ question: nlQuestion })
+      setSql(response.sql)
+      setMode('sql')
+    } catch (err: any) {
+      setError(err.message || 'Failed to convert to SQL. Make sure Groq API is configured.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExplainQuery = async () => {
+    if (!sql.trim()) return
+
+    try {
+      const response = await explainSQL.mutateAsync({ sql })
+      alert(`SQL Explanation:\n\n${response.explanation}\n\nComplexity: ${response.complexity}`)
+    } catch (err: any) {
+      alert('Failed to explain SQL. Make sure Groq API is configured.')
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">SQL Query</label>
-        <textarea
-          value={sql}
-          onChange={(e) => setSql(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-          rows={8}
-          placeholder="Enter your SQL query here..."
-        />
+      {/* Mode Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMode('sql')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            mode === 'sql'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          SQL Mode
+        </button>
+        <button
+          onClick={() => setMode('nl')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            mode === 'nl'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          🤖 Natural Language
+        </button>
       </div>
 
-      <button
-        onClick={handleExecute}
-        disabled={loading || !sql.trim()}
-        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? 'Executing...' : '▶ Execute Query'}
-      </button>
+      {/* Natural Language Mode */}
+      {mode === 'nl' && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ask in Plain English
+            </label>
+            <textarea
+              value={nlQuestion}
+              onChange={(e) => setNlQuestion(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              rows={4}
+              placeholder="e.g., Show me the top 10 customers by revenue in the last 30 days"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleConvertToSQL}
+              disabled={loading || !nlQuestion.trim()}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            >
+              {loading ? 'Converting...' : '✨ Convert to SQL'}
+            </button>
+            <div className="text-xs text-gray-500 flex items-center">
+              Powered by Groq LLM
+            </div>
+          </div>
+          {generateSQL.data && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="font-medium text-sm text-purple-900 mb-2">Generated SQL:</div>
+              <div className="bg-white p-3 rounded font-mono text-sm">{generateSQL.data.sql}</div>
+              <div className="mt-2 text-xs text-purple-700">
+                Confidence: {(generateSQL.data.confidence * 100).toFixed(0)}% • {generateSQL.data.explanation}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SQL Mode */}
+      {mode === 'sql' && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">SQL Query</label>
+            <textarea
+              value={sql}
+              onChange={(e) => setSql(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+              rows={8}
+              placeholder="Enter your SQL query here..."
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleExecute}
+              disabled={loading || !sql.trim()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Executing...' : '▶ Execute Query'}
+            </button>
+            <button
+              onClick={handleExplainQuery}
+              disabled={explainSQL.isPending || !sql.trim()}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+            >
+              {explainSQL.isPending ? 'Explaining...' : '💡 Explain Query'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -539,41 +656,7 @@ function AuditTab() {
   )
 }
 
-// Data Tab - File Upload & Catalog
-function DataTab() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold mb-4">📤 Upload Data</h2>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <div className="text-4xl mb-2">📁</div>
-          <div className="text-gray-600 mb-2">Drag and drop your CSV file here</div>
-          <div className="text-sm text-gray-500">or click to browse</div>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Select File
-          </button>
-        </div>
-        <div className="mt-4 text-sm text-gray-600">
-          <strong>Supported formats:</strong> CSV, Parquet, JSON
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold mb-4">📊 Data Catalog</h2>
-        <div className="text-gray-600">
-          <p>Your uploaded datasets will appear here.</p>
-          <p className="text-sm mt-2">Use the API to upload your first dataset:</p>
-          <pre className="bg-gray-100 p-3 rounded mt-2 text-xs overflow-x-auto">
-{`curl -X POST http://localhost:8000/api/v1/data/upload \\
-  -H "Authorization: Bearer $TOKEN" \\
-  -F "file=@your_data.csv" \\
-  -F "table_name=my_data"`}
-          </pre>
-        </div>
-      </div>
-    </div>
-  )
-}
+// Data Tab replaced with CatalogBrowser component (imported at top)
 
 // Pipelines Tab
 function PipelinesTab() {
