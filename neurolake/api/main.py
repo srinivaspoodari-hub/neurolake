@@ -41,6 +41,7 @@ from neurolake.api.routers import (
     audit_v1,
     compliance_v1,
     integrations_v1,
+    jobs_v1,
     health,
     metrics as metrics_router
 )
@@ -306,6 +307,7 @@ app.include_router(agents_v1.router, prefix="/api/v1/agents", tags=["Agents v1"]
 app.include_router(audit_v1.router, prefix="/api/v1/audit", tags=["Audit v1"])
 app.include_router(compliance_v1.router, prefix="/api/v1/compliance", tags=["Compliance v1"])
 app.include_router(integrations_v1.router, prefix="/api/v1/integrations", tags=["Integrations v1"])
+app.include_router(jobs_v1.router, prefix="/api/v1/jobs", tags=["Jobs v1"])
 
 # Setup OpenTelemetry instrumentation
 FastAPIInstrumentor.instrument_app(app)

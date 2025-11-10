@@ -12,7 +12,8 @@ from . import (
     agents_v1,
     audit_v1,
     compliance_v1,
-    integrations_v1
+    integrations_v1,
+    jobs_v1
 )
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "agents_v1",
     "audit_v1",
     "compliance_v1",
-    "integrations_v1"
+    "integrations_v1",
+    "jobs_v1"
 ]

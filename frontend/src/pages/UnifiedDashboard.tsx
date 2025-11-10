@@ -14,8 +14,9 @@ import { queryService } from '@/services/queryService'
 import { agentsService } from '@/services/agentsService'
 import { formatDistanceToNow } from 'date-fns'
 import CatalogBrowser from '@/components/CatalogBrowser'
+import JobsManagement from '@/components/JobsManagement'
 
-type TabType = 'overview' | 'query' | 'agents' | 'compliance' | 'audit' | 'data' | 'pipelines'
+type TabType = 'overview' | 'query' | 'agents' | 'compliance' | 'audit' | 'data' | 'pipelines' | 'jobs'
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -44,6 +45,7 @@ export default function UnifiedDashboard() {
               {[
                 { id: 'overview', label: '📊 Overview', icon: '📊' },
                 { id: 'query', label: '🔍 Query', icon: '🔍' },
+                { id: 'jobs', label: '⚡ Jobs & Ingestion', icon: '⚡' },
                 { id: 'agents', label: '🤖 AI Agents', icon: '🤖' },
                 { id: 'compliance', label: '🔒 Compliance', icon: '🔒' },
                 { id: 'audit', label: '📝 Audit', icon: '📝' },
@@ -69,6 +71,7 @@ export default function UnifiedDashboard() {
           <div className="p-6">
             {activeTab === 'overview' && <OverviewTab />}
             {activeTab === 'query' && <QueryTab />}
+            {activeTab === 'jobs' && <JobsManagement />}
             {activeTab === 'agents' && <AgentsTab />}
             {activeTab === 'compliance' && <ComplianceTab />}
             {activeTab === 'audit' && <AuditTab />}
