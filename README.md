@@ -123,32 +123,64 @@ neurolake/
 ## Getting Started
 
 ### Prerequisites
-- Rust 1.80+
 - Python 3.11+
-- Kubernetes cluster (local or cloud)
+- Node.js 18+
 - PostgreSQL 15+
 - Redis 7+
 
 ### Quick Start
+
+**Option 1: Unified Startup Script (Recommended)**
 
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/neurolake.git
 cd neurolake
 
-# Build core engine
-cd core
-cargo build --release
+# Start all services with one command
+./start-neurolake.sh
+
+# Other commands:
+./start-neurolake.sh --stop      # Stop all services
+./start-neurolake.sh --restart   # Restart all services
+./start-neurolake.sh --status    # Check status
+./start-neurolake.sh --logs      # View logs
+./start-neurolake.sh --health    # Run health checks
+```
+
+The startup script will:
+- Check prerequisites and dependencies
+- Set up environment variables
+- Initialize database and Redis
+- Start backend (FastAPI) on port 8000
+- Start frontend (React) on port 3000
+- Run health checks
+
+**Option 2: Manual Setup**
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/neurolake.git
+cd neurolake
 
 # Set up Python environment
-cd ../ai
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 pip install -r requirements.txt
 
-# Start services
-docker-compose up -d
+# Start backend
+uvicorn neurolake.api.main:app --reload --port 8000
+
+# In another terminal, start frontend
+cd frontend
+npm install
+npm run dev
 ```
+
+**Access the Platform:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ## Development
 
