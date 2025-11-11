@@ -132,6 +132,7 @@ neurolake/
 
 **Option 1: Unified Startup Script (Recommended)**
 
+**For Linux/Mac (Bash):**
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/neurolake.git
@@ -146,6 +147,23 @@ cd neurolake
 ./start-neurolake.sh --status    # Check status
 ./start-neurolake.sh --logs      # View logs
 ./start-neurolake.sh --health    # Run health checks
+```
+
+**For Windows (PowerShell):**
+```powershell
+# Clone repository
+git clone https://github.com/yourusername/neurolake.git
+cd neurolake
+
+# Start all services with one command
+.\start-neurolake.ps1
+
+# Other commands:
+.\start-neurolake.ps1 -Stop      # Stop all services
+.\start-neurolake.ps1 -Restart   # Restart all services
+.\start-neurolake.ps1 -Status    # Check status
+.\start-neurolake.ps1 -Logs      # View logs
+.\start-neurolake.ps1 -Health    # Run health checks
 ```
 
 The startup script will:
